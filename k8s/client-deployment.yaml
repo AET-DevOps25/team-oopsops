@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+  namespace: oops-ops-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+        - name: client
+          image: ghcr.io/oops-ops/client:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PUBLIC_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: api_url
