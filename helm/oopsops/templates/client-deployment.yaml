@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: client
-  namespace: oopsops-app
+  namespace: team-oops-ops
 spec:
   replicas: 1
   selector:

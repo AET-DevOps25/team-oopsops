@@ -2,13 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: client-service
-  namespace: oopsops-app
+  namespace: team-oops-ops
 spec:
   selector:
     app: client
   ports:
     - port: 3000
       targetPort: 3000
-      nodePort: 30000
+      nodePort: 30003
       protocol: TCP
   type: NodePort

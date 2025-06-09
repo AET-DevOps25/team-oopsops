@@ -1,0 +1,36 @@
+tumid: ge58baq
+
+namespace:
+  create: false
+
+server:
+  image:
+    repository: ghcr.io/oops-ops/server
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8090
+    targetPort: 8090
+  replicaCount: 1
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: docker
+
+client:
+  image:
+    repository: ghcr.io/oops-ops/client
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  replicaCount: 1
+
+ingress:
+  enabled: true
+  className: "nginx"
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"

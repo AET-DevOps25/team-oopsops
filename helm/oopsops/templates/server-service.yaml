@@ -2,13 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: server-service
-  namespace: oopsops-app
+  namespace: team-oops-ops
 spec:
   selector:
     app: server
   ports:
     - port: 8090
       targetPort: 8090
-      nodePort: 30001
+      nodePort: 30002
       protocol: TCP
   type: NodePort
