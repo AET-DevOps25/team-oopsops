@@ -10,7 +10,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     healthcheck:
     #TODO: change port to 8090
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -25,7 +25,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8080}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8090}
     depends_on:
       - server
     restart: unless-stopped
