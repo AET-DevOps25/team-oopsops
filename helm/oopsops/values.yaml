@@ -3,7 +3,7 @@ namespace:
 
 server:
   image:
-    repository: ghcr.io/oops-ops/server
+    repository: ghcr.io/aet-devops25/team-oopsops/server
     tag: latest
     pullPolicy: Always
   service:
@@ -17,7 +17,7 @@ server:
 
 client:
   image:
-    repository: ghcr.io/oops-ops/client
+    repository: ghcr.io/aet-devops25/team-oopsops/client
     tag: latest
     pullPolicy: Always
   service:
