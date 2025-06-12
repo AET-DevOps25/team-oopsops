@@ -23,7 +23,7 @@ client:
   service:
     type: ClusterIP
     port: 3000
-    targetPort: 3000
+    targetPort: 80
   replicaCount: 1
 
 ingress:

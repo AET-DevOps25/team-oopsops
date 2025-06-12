@@ -4,4 +4,5 @@ metadata:
   name: app-config
   namespace: team-oops-ops
 data:
+# TODO: Change this later to the actual API URL
   api_url: https://team-oops-ops.student.k8s.aet.cit.tum.de

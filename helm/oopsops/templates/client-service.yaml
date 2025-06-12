@@ -5,7 +5,7 @@ metadata:
   namespace: team-oops-ops
 spec:
   selector:
-    app: canteen-client-selector
+    app: client
   ports:
     - port: {{ .Values.client.service.port }}
       targetPort: {{ .Values.client.service.targetPort }}
