@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-service
+  namespace: team-oops-ops
+spec:
+  selector:
+    app: server
+  ports:
+    - port: {{ .Values.server.service.port }}
+      targetPort: {{ .Values.server.service.targetPort }}
+      protocol: TCP
+  type: {{ .Values.server.service.type }}
