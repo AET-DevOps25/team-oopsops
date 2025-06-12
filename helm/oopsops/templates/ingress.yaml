@@ -16,6 +16,7 @@ spec:
         - "team-oops-ops.student.k8s.aet.cit.tum.de"
       secretName: "canteen-devops25-tls"
   {{- end }}
+  #TODO:fix the host hardcoded values
   rules:
     - host: "team-oops-ops.student.k8s.aet.cit.tum.de"
       http:

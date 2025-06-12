@@ -4,5 +4,5 @@ metadata:
   name: app-config
   namespace: team-oops-ops
 data:
-  # The API URL should be your ingress hostname without the /api path
+  # TODO: The API URL should be your ingress hostname without the /api path
   api_url: http://localhost:30002
