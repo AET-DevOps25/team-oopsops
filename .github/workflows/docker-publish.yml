@@ -11,9 +11,9 @@ on:
       - '.github/workflows/docker-publish.yml'
 
 env:
-  REPO_OWNER: oops-ops
-  CLIENT_IMAGE: ghcr.io/oops-ops/client:latest
-  SERVER_IMAGE: ghcr.io/oops-ops/server:latest
+  REPO_OWNER: aet-devops25
+  CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client:latest
+  SERVER_IMAGE: ghcr.io/aet-devops25/team-oopsops/server:latest
   CLIENT_DIR: ./client
   SERVER_DIR: ./server
 

@@ -1,6 +1,6 @@
 services:
   server:
-    image: ghcr.io/oops-ops/server:latest
+    image: ghcr.io/aet-devops25/team-oopsops/server:latest
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   client:
-    image: ghcr.io/oops-ops/client:latest
+    image: ghcr.io/aet-devops25/team-oopsops/client:latest
     build:
       context: ./client
       dockerfile: Dockerfile
