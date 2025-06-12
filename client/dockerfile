@@ -2,12 +2,14 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
+RUN npm config set registry https://registry.npmmirror.com
 RUN npm ci
+RUN npm config set registry https://registry.npmjs.org
 COPY . .
 RUN npm run build
 RUN npm prune --production
-# Stage 2: Run the application
 
+# Stage 2: Run the application
 FROM nginx:stable-alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
