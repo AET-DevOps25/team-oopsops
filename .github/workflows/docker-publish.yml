@@ -10,6 +10,13 @@ on:
       - 'server/**'
       - '.github/workflows/docker-publish.yml'
 
+env:
+  REPO_OWNER: oops-ops
+  CLIENT_IMAGE: ghcr.io/oops-ops/client:latest
+  SERVER_IMAGE: ghcr.io/oops-ops/server:latest
+  CLIENT_DIR: ./client
+  SERVER_DIR: ./server
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -19,7 +26,7 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Log in to GHCR
@@ -31,10 +38,10 @@ jobs:
 
       - name: Build and Push Client Image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/client:latest ./client
-          docker push ghcr.io/${{ github.repository_owner }}/client:latest
+          docker build -t ${{ env.CLIENT_IMAGE }} ${{ env.CLIENT_DIR }}
+          docker push ${{ env.CLIENT_IMAGE }}
 
       - name: Build and Push Server Image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/server:latest ./server
-          docker push ghcr.io/${{ github.repository_owner }}/server:latest
+          docker build -t ${{ env.SERVER_IMAGE }} ${{ env.SERVER_DIR }}
+          docker push ${{ env.SERVER_IMAGE }}
