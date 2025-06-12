@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client
+  name: canteen-client
   namespace: team-oops-ops
 spec:
-  replicas: 1
+  replicas: {{ .Values.client.replicaCount }}
   selector:
     matchLabels:
       app: client
@@ -15,10 +15,17 @@ spec:
     spec:
       containers:
         - name: client
-          image: ghcr.io/oops-ops/client:latest
-          imagePullPolicy: Always
+          image: "{{ .Values.client.image.repository }}:{{ .Values.client.image.tag }}"
+          imagePullPolicy: {{ .Values.client.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "50m"
+              memory: "50Mi"
           ports:
-            - containerPort: 3000
+            - containerPort: {{ .Values.client.service.targetPort }}
           env:
             - name: PUBLIC_API_URL
               valueFrom:

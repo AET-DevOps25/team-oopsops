@@ -30,5 +30,7 @@ ingress:
   enabled: true
   className: "nginx"
   tls: true
+  host: "team-oops-ops.student.k8s.aet.cit.tum.de"
+  secretName: "devops25-tls"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"

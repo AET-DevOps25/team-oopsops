@@ -5,10 +5,9 @@ metadata:
   namespace: team-oops-ops
 spec:
   selector:
-    app: client
+    app: canteen-client-selector
   ports:
-    - port: 3000
-      targetPort: 3000
-      nodePort: 30003
+    - port: {{ .Values.client.service.port }}
+      targetPort: {{ .Values.client.service.targetPort }}
       protocol: TCP
-  type: NodePort
+  type: {{ .Values.client.service.type }}

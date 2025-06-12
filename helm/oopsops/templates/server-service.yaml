@@ -7,8 +7,7 @@ spec:
   selector:
     app: server
   ports:
-    - port: 8090
-      targetPort: 8090
-      nodePort: 30002
+    - port: {{ .Values.server.service.port }}
+      targetPort: {{ .Values.server.service.targetPort }}
       protocol: TCP
-  type: NodePort
+  type: {{ .Values.server.service.type }}

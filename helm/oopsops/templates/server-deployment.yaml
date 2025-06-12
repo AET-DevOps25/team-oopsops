@@ -4,7 +4,7 @@ metadata:
   name: server
   namespace: team-oops-ops
 spec:
-  replicas: 1
+  replicas: {{ .Values.server.replicaCount }}
   selector:
     matchLabels:
       app: server
@@ -15,10 +15,19 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/oops-ops/server:latest
-          imagePullPolicy: Always
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
           ports:
-            - containerPort: 8090
+            - containerPort: {{ .Values.server.service.targetPort }}
           env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: docker
+            {{- range .Values.server.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
