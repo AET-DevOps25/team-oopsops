@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: client
-  namespace: team-oops-ops
+  namespace: oops-ops
 spec:
   replicas: {{ .Values.client.replicaCount }}
   selector:

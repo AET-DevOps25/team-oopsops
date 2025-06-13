@@ -1,15 +1,15 @@
 services:
-  server:
-    image: ghcr.io/aet-devops25/team-oopsops/server:latest
+  document-service:
+    image: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
     build:
       context: ./server
-      dockerfile: Dockerfile
+      dockerfile: document-service/Dockerfile
     ports:
-      - "8090:8090"
+      - "8091:8091"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -24,7 +24,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8090}
+      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8091}
     depends_on:
-      - server
+      - document-service
     restart: unless-stopped
