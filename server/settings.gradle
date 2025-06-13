@@ -1,4 +1,4 @@
 rootProject.name = 'server'
 
-include 'common'
-include 'document-service'
+include ':document-service'
+include ':common'
