@@ -1,4 +1,4 @@
-name: Build and Push Docker Images
+name: Build and Deploy Docker Images
 
 on:
   push:
@@ -13,9 +13,9 @@ on:
 env:
   REPO_OWNER: aet-devops25
   CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client:latest
-  SERVER_IMAGE: ghcr.io/aet-devops25/team-oopsops/server:latest
+  SERVER_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
   CLIENT_DIR: ./client
-  SERVER_DIR: ./server
+  SERVER_DIR: ./server/document-service
 
 jobs:
   build-and-push:
