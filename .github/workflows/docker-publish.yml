@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-      - 'feat/**'
+      - "feat/**"
     paths:
-      - 'client/**'
-      - 'server/**'
-      - '.github/workflows/docker-publish.yml'
+      - "client/**"
+      - "server/**"
+      - ".github/workflows/docker-publish.yml"
 
 env:
   REPO_OWNER: aet-devops25
@@ -43,5 +43,5 @@ jobs:
 
       - name: Build and Push Server Image
         run: |
-          docker build -t ${{ env.SERVER_IMAGE }} ${{ env.SERVER_DIR }}
+          docker build -t ${{ env.SERVER_IMAGE }} -f ${{ env.SERVER_DIR }}/Dockerfile ./server
           docker push ${{ env.SERVER_IMAGE }}
