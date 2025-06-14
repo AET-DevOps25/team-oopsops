@@ -5,4 +5,4 @@ metadata:
   namespace: oops-ops
 data:
 # TODO: Change this later to the actual API URL
-  api_url: https://redactiq.ai
+  api_url: https://redactiq.student.k8s.aet.cit.tum.de
