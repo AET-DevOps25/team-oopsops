@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-service
+  namespace: oops-ops
+spec:
+  replicas: {{ .Values.documentService.replicaCount }}
+  selector:
+    matchLabels:
+      app: document-service
+  template:
+    metadata:
+      labels:
+        app: document-service
+    spec:
+      containers:
+        - name: document-service
+          image: "{{ .Values.documentService.image.repository }}:{{ .Values.documentService.image.tag }}"
+          imagePullPolicy: {{ .Values.documentService.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          ports:
+            - containerPort: {{ .Values.documentService.service.targetPort }}
+          env:
+            {{- range .Values.documentService.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}

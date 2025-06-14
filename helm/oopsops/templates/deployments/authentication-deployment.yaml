@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-service
+  namespace: oops-ops
+spec:
+  replicas: {{ .Values.authenticationService.replicaCount }}
+  selector:
+    matchLabels:
+      app: authentication-service
+  template:
+    metadata:
+      labels:
+        app: authentication-service
+    spec:
+      containers:
+        - name: authentication-service
+          image: "{{ .Values.authenticationService.image.repository }}:{{ .Values.authenticationService.image.tag }}"
+          imagePullPolicy: {{ .Values.authenticationService.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          ports:
+            - containerPort: {{ .Values.authenticationService.service.targetPort }}
+          env:
+            {{- range .Values.authenticationService.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}

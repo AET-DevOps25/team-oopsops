@@ -1,1 +1,6 @@
-rootProject.name = 'app'
+rootProject.name = 'server'
+
+include ':common'
+include ':document-service'
+include ':authentication-service'
+include ':archive-service'

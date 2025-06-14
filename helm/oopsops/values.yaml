@@ -1,15 +1,44 @@
 namespace:
   create: false
+  name: oops-ops
 
-server:
+documentService:
   image:
-    repository: ghcr.io/aet-devops25/team-oopsops/server
+    repository: ghcr.io/aet-devops25/team-oopsops/server/document-service
     tag: latest
     pullPolicy: Always
   service:
     type: ClusterIP
-    port: 8090
-    targetPort: 8090
+    port: 8091
+    targetPort: 8091
+  replicaCount: 1
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: docker
+
+archiveService:
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/server/archive-service
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8093
+    targetPort: 8093
+  replicaCount: 1
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: docker
+
+authenticationService:
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/server/authentication-service
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8092
+    targetPort: 8092
   replicaCount: 1
   env:
     - name: SPRING_PROFILES_ACTIVE
@@ -30,7 +59,7 @@ ingress:
   enabled: true
   className: "nginx"
   tls: true
-  host: "team-oops-ops.student.k8s.aet.cit.tum.de"
+  host: "redactiq.student.k8s.aet.cit.tum.de"
   secretName: "devops25-tls"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
