@@ -18,6 +18,11 @@ allprojects {
     }
 }
 
+ext {
+    lombokVersion = '1.18.30'
+    springBootVersion = '3.5.0'
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
@@ -32,9 +37,14 @@ subprojects {
     }
 
     dependencies {
-        compileOnly 'org.projectlombok:lombok:1.18.30'
-    	annotationProcessor 'org.projectlombok:lombok:1.18.30'
-        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        // Common dependencies
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+        implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+        implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
+
+        testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
