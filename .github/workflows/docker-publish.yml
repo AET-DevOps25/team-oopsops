@@ -54,3 +54,8 @@ jobs:
         run: |
           docker build -t ${{ env.ARCHIVE_IMAGE }} -f ${{ env.ARCHIVE_DIR }}/Dockerfile ./server
           docker push ${{ env.ARCHIVE_IMAGE }}
+      - name: Build and Push Authentication Service Image
+        run: |
+          docker build -t ${{ env.AUTHENTICATION_IMAGE }} -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
+          docker push ${{ env.AUTHENTICATION_IMAGE }}
+
