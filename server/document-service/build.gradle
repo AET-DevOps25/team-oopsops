@@ -1,0 +1,8 @@
+plugins {
+    id 'org.springframework.boot' version '3.5.0'
+    id 'java'
+}
+
+dependencies {
+    implementation project(':common')
+}

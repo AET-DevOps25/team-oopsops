@@ -1,21 +1,24 @@
-name: Build and Push Docker Images
+name: Build and Deploy Docker Images
 
 on:
   push:
     branches:
       - main
-      - 'feat/**'
     paths:
-      - 'client/**'
-      - 'server/**'
-      - '.github/workflows/docker-publish.yml'
+      - "client/**"
+      - "server/**"
+      - ".github/workflows/docker-publish.yml"
 
 env:
   REPO_OWNER: aet-devops25
   CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client:latest
-  SERVER_IMAGE: ghcr.io/aet-devops25/team-oopsops/server:latest
+  DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
+  ARCHIVE_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/archive-service:latest
+  AUTHENTICATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
   CLIENT_DIR: ./client
-  SERVER_DIR: ./server
+  DOCUMENT_DIR: ./server/document-service
+  ARCHIVE_DIR: ./server/archive-service
+  AUTHENTICATION_DIR: ./server/authentication-service
 
 jobs:
   build-and-push:
@@ -41,7 +44,17 @@ jobs:
           docker build -t ${{ env.CLIENT_IMAGE }} ${{ env.CLIENT_DIR }}
           docker push ${{ env.CLIENT_IMAGE }}
 
-      - name: Build and Push Server Image
+      - name: Build and Push Document Service Image
         run: |
-          docker build -t ${{ env.SERVER_IMAGE }} ${{ env.SERVER_DIR }}
-          docker push ${{ env.SERVER_IMAGE }}
+          docker build -t ${{ env.DOCUMENT_IMAGE }} -f ${{ env.DOCUMENT_DIR }}/Dockerfile ./server
+          docker push ${{ env.DOCUMENT_IMAGE }}
+
+      - name: Build and Push Archive Service Image
+        run: |
+          docker build -t ${{ env.ARCHIVE_IMAGE }} -f ${{ env.ARCHIVE_DIR }}/Dockerfile ./server
+          docker push ${{ env.ARCHIVE_IMAGE }}
+      - name: Build and Push Authentication Service Image
+        run: |
+          docker build -t ${{ env.AUTHENTICATION_IMAGE }} -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
+          docker push ${{ env.AUTHENTICATION_IMAGE }}
+
