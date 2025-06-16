@@ -1,4 +1,22 @@
 services:
+
+  document-db:
+    image: postgres:17
+    container_name: document-db
+    environment:
+      POSTGRES_DB:       documentdb
+      POSTGRES_USER:     dev_user
+      POSTGRES_PASSWORD: dev_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - document-db-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d documentdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   document-service:
     image: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
     build:
@@ -7,7 +25,10 @@ services:
     ports:
       - "8091:8091"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://document-db:5432/documentdb
+      - SPRING_DATASOURCE_USERNAME=dev_user
+      - SPRING_DATASOURCE_PASSWORD=dev_pass
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
       interval: 30s
@@ -62,3 +83,6 @@ services:
     depends_on:
       - document-service
     restart: unless-stopped
+
+volumes:
+  document-db-data:
