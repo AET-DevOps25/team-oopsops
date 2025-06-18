@@ -1,6 +1,8 @@
 -- enable pgcrypto UUIDs
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+DROP TYPE IF EXISTS document_status;
+
 CREATE TYPE document_status AS ENUM (
   'UPLOADED',
   'PROCESSED',

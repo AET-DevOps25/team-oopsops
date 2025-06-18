@@ -12,6 +12,7 @@ import oopsops.app.document.entity.DocumentText;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class DocumentService {
@@ -21,12 +22,16 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
 
     public DocumentService(
-            FileSystemStorageService storageService,
+            StorageService storageService,
             PdfParsingService pdfParsingService,
             DocumentRepository documentRepository) {
         this.storageService = storageService;
         this.pdfParsingService = pdfParsingService;
         this.documentRepository = documentRepository;
+    }
+
+    public List<Document> getAllDocuments() {
+        return documentRepository.findAll();
     }
 
     @Transactional

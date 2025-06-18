@@ -2,6 +2,8 @@ package oopsops.app.document.controller;
 
 import java.net.URI;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +27,20 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
-    @GetMapping("/doc")
-    public ResponseEntity<String> doc() {
-        return ResponseEntity.ok("Document service is running");
+    @GetMapping
+    public ResponseEntity<List<DocumentDto>> getAllDocuments() {
+        List<Document> documents = documentService.getAllDocuments();
+        List<DocumentDto> dtos = documents.stream()
+            .map(document -> new DocumentDto(
+                document.getId(),
+                document.getUserId(),
+                document.getFileName(),
+                document.getFileUrl(),
+                document.getStatus(),
+                document.getUploadDate()
+            ))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @PostMapping("/upload")
