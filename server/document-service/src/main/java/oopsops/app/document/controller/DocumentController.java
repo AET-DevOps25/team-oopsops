@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import oopsops.app.document.dto.DocumentDto;
 import oopsops.app.document.entity.Document;
 import oopsops.app.document.service.DocumentService;
+import oopsops.app.document.exception.InvalidFileTypeException;
 
 @RestController
 @RequestMapping("/api/v1/documents")
@@ -45,6 +46,13 @@ public class DocumentController {
 
     @PostMapping("/upload")
     public ResponseEntity<DocumentDto> upload(@RequestParam("file") MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            throw new InvalidFileTypeException("No file uploaded");
+        }
+        if (!"application/pdf".equals(file.getContentType())) {
+            throw new InvalidFileTypeException("Only PDFs allowed");
+        }
 
         // Temporary user ID for testing purposes
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000000");
