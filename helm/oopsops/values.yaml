@@ -55,6 +55,17 @@ client:
     targetPort: 80
   replicaCount: 1
 
+genaiService:
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/genai-service
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  replicaCount: 1
+
 ingress:
   enabled: true
   className: "nginx"

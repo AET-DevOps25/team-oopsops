@@ -15,10 +15,12 @@ env:
   DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
   ARCHIVE_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/archive-service:latest
   AUTHENTICATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
+  GENAI_IMAGE: ghcr.io/aet-devops25/team-oopsops/genai-service:latest
   CLIENT_DIR: ./client
   DOCUMENT_DIR: ./server/document-service
   ARCHIVE_DIR: ./server/archive-service
   AUTHENTICATION_DIR: ./server/authentication-service
+  GENAI_DIR: ./genai-service
 
 jobs:
   build-and-push:
@@ -57,4 +59,9 @@ jobs:
         run: |
           docker build -t ${{ env.AUTHENTICATION_IMAGE }} -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
           docker push ${{ env.AUTHENTICATION_IMAGE }}
+
+      - name: Build and Push GenAI Service Image
+        run: |
+          docker build -t ${{ env.GENAI_IMAGE }} -f ${{ env.GENAI_DIR }}
+          docker push ${{ env.GENAI_IMAGE }}
 

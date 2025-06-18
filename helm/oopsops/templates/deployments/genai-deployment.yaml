@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genai-service
+  namespace: oops-ops
+spec:
+  replicas: {{ .Values.genaiService.replicaCount }}
+  selector:
+    matchLabels:
+      app: genai-service
+  template:
+    metadata:
+      labels:
+        app: genai-service
+    spec:
+      containers:
+        - name: genai-service
+          image: "{{ .Values.genaiService.image.repository }}:{{ .Values.genaiService.image.tag }}"
+          imagePullPolicy: {{ .Values.genaiService.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          ports:
+            - containerPort: {{ .Values.genaiService.service.targetPort }}
+          env:
+            {{- range .Values.genaiService.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
