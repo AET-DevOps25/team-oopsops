@@ -31,3 +31,9 @@ spec:
             - name: {{ .name }}
               value: "{{ .value }}"
             {{- end }}
+            - name: SPRING_DATASOURCE_URL
+              value: "{{ .Values.documentService.database.url }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "{{ .Values.documentService.database.username }}"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "{{ .Values.documentService.database.password }}"
