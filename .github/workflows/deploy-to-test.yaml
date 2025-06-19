@@ -1,7 +1,7 @@
 name: Deploy to Rancher Test (PR branches)
 
 on:
-  pull_requests:
+  pull_request:
     branches:
       - '**'
 
