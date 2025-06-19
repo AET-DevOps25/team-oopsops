@@ -67,7 +67,7 @@ ingress:
   enabled: true
   className: "nginx"
   tls: true
-  host: use-template-logic
+  host: ""
   secretName: "devops25-tls"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
