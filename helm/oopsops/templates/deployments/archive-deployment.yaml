@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: archive-service
-  namespace: oops-ops
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.archiveService.replicaCount }}
   selector:
