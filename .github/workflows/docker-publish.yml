@@ -63,6 +63,6 @@ jobs:
 
       - name: Build and Push GenAI Service Image
         run: |
-          docker build -t ${{ env.GENAI_IMAGE }} -f ${{ env.GENAI_DIR }}
+          docker build -t ${{ env.GENAI_IMAGE }} -f ${{ env.GENAI_DIR }}/Dockerfile ${{ env.GENAI_DIR }}
           docker push ${{ env.GENAI_IMAGE }}
 
