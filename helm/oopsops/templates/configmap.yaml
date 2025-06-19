@@ -5,4 +5,5 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
 # TODO: Change this later to the actual API URL
-  api_url: "https://{{ include \"oopsops.ingress.host\" . }}"
+  api_url: "https://{{ include "oopsops.ingress.host" . }}"
+
