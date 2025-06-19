@@ -67,7 +67,7 @@ ingress:
   enabled: true
   className: "nginx"
   tls: true
-  host: "redactiq.student.k8s.aet.cit.tum.de"
+  host: use-template-logic
   secretName: "devops25-tls"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
