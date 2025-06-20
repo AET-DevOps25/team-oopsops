@@ -31,3 +31,8 @@ spec:
             - name: {{ .name }}
               value: "{{ .value }}"
             {{- end }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.secretName }}
+                  key: OPENAI_API_KEY

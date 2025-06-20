@@ -1,3 +1,5 @@
+openai:
+  secretName: openai-secret
 
 documentService:
   image:
