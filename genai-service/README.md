@@ -33,21 +33,15 @@
 
 4.⁠ ⁠Copy the ⁠ .env.example ⁠ file to ⁠ .env ⁠ and fill in the required values
 
-```bash
+   ```bash
    cp .env.example .env
-```
-   
-    ⁠
+   ```
 
-5.⁠ Build with Docker
-
-    open docker
+5.⁠ Build with Docker: First open docker on your machine and then run the following command in the terminal:
 
 ```bash
-    docker compose up -d --build
+docker compose up -d --build
 ```
-
-    ⁠
 
 6.⁠ ⁠Open your browser and go to http://localhost:8000/docs to see the API documentation.
 
