@@ -5,6 +5,7 @@ dist/
 tmp/
 app/**/*.js
 app/**/*.js.map
+uploads
 
 # dependencies
 node_modules/

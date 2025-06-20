@@ -14,6 +14,10 @@ documentService:
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: docker
+  database:
+    url: jdbc:postgresql://document-db:5432/documentdb
+    username: dev_user
+    password: dev_pass
 
 archiveService:
   image:
