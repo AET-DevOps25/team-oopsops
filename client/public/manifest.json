@@ -1,0 +1,16 @@
+{
+  "name": "Redacta",
+  "short_name": "Redacta",
+  "description": "Securely anonymize and summarize your documents with advanced AI technology",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/Redacta_logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
