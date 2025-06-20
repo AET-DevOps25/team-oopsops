@@ -1,6 +1,5 @@
-namespace:
-  create: false
-  name: oops-ops
+openai:
+  secretName: openai-secret
 
 documentService:
   image:
@@ -59,11 +58,22 @@ client:
     targetPort: 80
   replicaCount: 1
 
+genaiService:
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/genai-service
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  replicaCount: 1
+
 ingress:
   enabled: true
   className: "nginx"
   tls: true
-  host: "redactiq.student.k8s.aet.cit.tum.de"
+  host: ""
   secretName: "devops25-tls"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
