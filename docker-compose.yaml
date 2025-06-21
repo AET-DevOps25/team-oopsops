@@ -34,7 +34,44 @@ services:
     volumes:
       - document-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev_user -d documentdb"]
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d anonymizationdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  anonymization-service:
+    image: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service:latest
+    build:
+      context: ./server
+      dockerfile: anonymization-service/Dockerfile
+    ports:
+      - "8094:8094"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://anonymization-db:5432/anonymizationdb
+      - SPRING_DATASOURCE_USERNAME=dev_user
+      - SPRING_DATASOURCE_PASSWORD=dev_pass
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8094/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  anonymization-db:
+    image: postgres:alpine
+    container_name: anonymization-db
+    environment:
+      POSTGRES_DB:       anonymizationdb
+      POSTGRES_USER:     dev_user
+      POSTGRES_PASSWORD: dev_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - anonymization-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d anonymizationdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -113,9 +150,11 @@ services:
       - "5050:80"
     depends_on:
       - document-db
+      - anonymization-db
     volumes:
       - pgadmin-data:/var/lib/pgadmin 
 
 volumes:
   document-db-data:
+  anonymization-db-data:
   pgadmin-data:

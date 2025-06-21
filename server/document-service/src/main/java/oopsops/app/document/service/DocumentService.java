@@ -3,9 +3,12 @@ package oopsops.app.document.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import oopsops.app.document.dto.DocumentDto;
+/*import oopsops.app.document.models.AnonymizeRequest;
+import oopsops.app.document.models.GenAiResponse;*/
 import oopsops.app.document.repository.DocumentRepository;
 import oopsops.app.document.entity.Document;
-import oopsops.app.document.entity.DocumentStatus;
 import oopsops.app.document.exception.InvalidFileTypeException;
 import oopsops.app.document.entity.DocumentText;
 
@@ -64,5 +67,25 @@ public class DocumentService {
 
         return documentRepository.save(doc);
     }
+
+    /*public DocumentDto autoAnonymize(UUID documentId, String level) {
+        Document document = documentRepository.findById(documentId)
+            .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        if (document.getDocumentText() == null) {
+            throw new RuntimeException("Document has no extracted text.");
+        }
+
+        AnonymizeRequest request = new AnonymizeRequest();
+        request.setOriginalText(document.getDocumentText().getText());
+        request.setLevel(level);
+
+        GenAiResponse response = genAiClient.anonymize(request);
+
+        document.setAnonymizedText(response.getReponseText());
+        documentRepository.save(document);
+
+        return new DocumentDto(document);
+    }*/
 
 }
