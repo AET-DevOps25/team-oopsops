@@ -6,59 +6,74 @@ on:
       - '**'
 
 env:
-  REPO_OWNER: aet-devops25
-  CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client:latest
-  DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
-  ARCHIVE_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/archive-service:latest
-  AUTHENTICATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
-  GENAI_IMAGE: ghcr.io/aet-devops25/team-oopsops/genai-service:latest
-  CLIENT_DIR: ./client
-  DOCUMENT_DIR: ./server/document-service
-  ARCHIVE_DIR: ./server/archive-service
-  AUTHENTICATION_DIR: ./server/authentication-service
-  GENAI_DIR: ./genai-service
+  TAG: ${{ github.sha }}
+  CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client
+  DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service
+  ARCHIVE_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/archive-service
+  AUTH_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service
+  GENAI_IMAGE: ghcr.io/aet-devops25/team-oopsops/genai-service
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Log in to GHCR
+      - name: Log in to GHCR  
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push Client Image
+      - name: Build & push Client
         run: |
-          docker build -t ${{ env.CLIENT_IMAGE }} ${{ env.CLIENT_DIR }}
-          docker push ${{ env.CLIENT_IMAGE }}
+          docker build -t $CLIENT_IMAGE:${{ env.TAG }} ./client
+          docker push $CLIENT_IMAGE:${{ env.TAG }}
 
-      - name: Build and Push Document Service Image
+      - name: Build & push Document Service
         run: |
-          docker build -t ${{ env.DOCUMENT_IMAGE }} -f ${{ env.DOCUMENT_DIR }}/Dockerfile ./server
-          docker push ${{ env.DOCUMENT_IMAGE }}
+          docker build -t $DOCUMENT_IMAGE:${{ env.TAG }} -f ./server/document-service/Dockerfile ./server
+          docker push $DOCUMENT_IMAGE:${{ env.TAG }}
 
-      - name: Build and Push Archive Service Image
+      - name: Build & push Archive Service
         run: |
-          docker build -t ${{ env.ARCHIVE_IMAGE }} -f ${{ env.ARCHIVE_DIR }}/Dockerfile ./server
-          docker push ${{ env.ARCHIVE_IMAGE }}
+          docker build -t $ARCHIVE_IMAGE:${{ env.TAG }} -f ./server/archive-service/Dockerfile ./server
+          docker push $ARCHIVE_IMAGE:${{ env.TAG }}
 
-      - name: Build and Push Authentication Service Image
+      - name: Build & push Auth Service
         run: |
-          docker build -t ${{ env.AUTHENTICATION_IMAGE }} -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
-          docker push ${{ env.AUTHENTICATION_IMAGE }}
+          docker build -t $AUTH_IMAGE:${{ env.TAG }} -f ./server/authentication-service/Dockerfile ./server
+          docker push $AUTH_IMAGE:${{ env.TAG }}
 
-      - name: Build and Push GenAI Service Image
+      - name: Build & push GenAI Service
         run: |
-          docker build -t ${{ env.GENAI_IMAGE }} -f ${{ env.GENAI_DIR }}/Dockerfile ${{ env.GENAI_DIR }}
-          docker push ${{ env.GENAI_IMAGE }}
+          docker build -t $GENAI_IMAGE:${{ env.TAG }} -f ./genai-service/Dockerfile ./genai-service
+          docker push $GENAI_IMAGE:${{ env.TAG }}
 
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up kubectl  
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.27.0
+
+      - name: Load Kubeconfig  
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      - name: Helm Upgrade  
+        run: |
+          helm upgrade --install oopsops ./charts/oopsops \
+            --namespace oopsops-test \
+            --set client.image.tag=${{ env.TAG }} \
+            --set documentService.image.tag=${{ env.TAG }} \
+            --set archiveService.image.tag=${{ env.TAG }} \
+            --set authenticationService.image.tag=${{ env.TAG }} \
+            --set genaiService.image.tag=${{ env.TAG }} \
+            --wait

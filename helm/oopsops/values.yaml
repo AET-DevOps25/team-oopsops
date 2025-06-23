@@ -73,7 +73,9 @@ ingress:
   enabled: true
   className: "nginx"
   tls: true
-  host: ""
+  host: "redacta.student.k8s.aet.cit.tum.de"
   secretName: "devops25-tls"
   annotations:
+    kubernetes.io/ingress.class: "nginx"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"

@@ -13,13 +13,41 @@ spec:
   {{- if .Values.ingress.tls }}
   tls:
     - hosts:
-        - {{ include "oopsops.ingress.host" . }}
+        - {{ .Values.ingress.host }}
       secretName: {{ .Values.ingress.secretName }}
   {{- end }}
   rules:
-    - host: {{ include "oopsops.ingress.host" . }}
+    - host: {{ .Values.ingress.host }}
       http:
         paths:
+          - path: /api/v1/documents
+            pathType: Prefix
+            backend:
+              service:
+                name: document-service
+                port:
+                  number: {{ .Values.documentService.service.port }}
+          - path: /api/v1/authentication
+            pathType: Prefix
+            backend:
+              service:
+                name: authentication-service
+                port:
+                  number: {{ .Values.authenticationService.service.port }}
+          - path: /api/v1/archive
+            pathType: Prefix
+            backend:
+              service:
+                name: archive-service
+                port:
+                  number: {{ .Values.archiveService.service.port }}
+          - path: /api/v1/genai
+            pathType: Prefix
+            backend:
+              service:
+                name: genai-service
+                port:
+                  number: {{ .Values.genaiService.service.port }}
           - path: /
             pathType: Prefix
             backend:
@@ -27,11 +55,4 @@ spec:
                 name: client-service
                 port:
                   number: {{ .Values.client.service.port }}
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: document-service
-                port:
-                  number: {{ .Values.documentService.service.port }}
 {{- end }}
