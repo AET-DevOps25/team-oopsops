@@ -51,29 +51,3 @@ jobs:
           docker build -t $GENAI_IMAGE:${{ env.TAG }} -f ./genai-service/Dockerfile ./genai-service
           docker push $GENAI_IMAGE:${{ env.TAG }}
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up kubectl  
-        uses: azure/setup-kubectl@v3
-        with:
-          version: v1.27.0
-
-      - name: Load Kubeconfig  
-        run: |
-          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
-          export KUBECONFIG=$PWD/kubeconfig
-
-      - name: Helm Upgrade  
-        run: |
-          helm upgrade --install oopsops ./charts/oopsops \
-            --namespace oopsops-test \
-            --set client.image.tag=${{ env.TAG }} \
-            --set documentService.image.tag=${{ env.TAG }} \
-            --set archiveService.image.tag=${{ env.TAG }} \
-            --set authenticationService.image.tag=${{ env.TAG }} \
-            --set genaiService.image.tag=${{ env.TAG }} \
-            --wait
