@@ -13,7 +13,7 @@ documentService:
   replicaCount: 1
   env:
     - name: SPRING_PROFILES_ACTIVE
-      value: docker
+      value: dev
   database:
     url: jdbc:postgresql://document-db:5432/documentdb
     username: dev_user
