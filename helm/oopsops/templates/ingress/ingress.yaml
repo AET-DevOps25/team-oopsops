@@ -1,16 +1,12 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: "ingress"
+  name: {{ include "oopsops.fullname" . }}
   namespace: {{ .Release.Namespace }}
-  {{- $annotations := .Values.ingress.annotations | default dict }}
-  {{- if $annotations }}
   annotations:
-    {{- toYaml $annotations | nindent 4 }}
-  {{- end }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls }}
   tls:
     - hosts:
@@ -21,39 +17,41 @@ spec:
     - host: {{ .Values.ingress.host }}
       http:
         paths:
+          # ── API endpoints ─────────────────────────────────────────────
           - path: /api/v1/documents
             pathType: Prefix
             backend:
               service:
-                name: document-service
+                name: {{ include "oopsops.fullname" . }}
                 port:
                   number: {{ .Values.documentService.service.port }}
           - path: /api/v1/authentication
             pathType: Prefix
             backend:
               service:
-                name: authentication-service
+                name: {{ include "oopsops.fullname" . }}
                 port:
                   number: {{ .Values.authenticationService.service.port }}
           - path: /api/v1/archive
             pathType: Prefix
             backend:
               service:
-                name: archive-service
+                name: {{ include "oopsops.fullname" . }}
                 port:
                   number: {{ .Values.archiveService.service.port }}
           - path: /api/v1/genai
             pathType: Prefix
             backend:
               service:
-                name: genai-service
+                name: {{ include "oopsops.fullname" . }}
                 port:
                   number: {{ .Values.genaiService.service.port }}
+          # ── SPA catch-all ────────────────────────────────────────────────
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client-service
+                name: {{ include "oopsops.fullname" . }}
                 port:
                   number: {{ .Values.client.service.port }}
 {{- end }}

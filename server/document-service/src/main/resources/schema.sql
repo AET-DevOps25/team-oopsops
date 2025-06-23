@@ -1,6 +1,3 @@
--- enable pgcrypto UUIDs
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
 DROP TYPE IF EXISTS document_status;
 
 CREATE TYPE document_status AS ENUM (
@@ -21,7 +18,7 @@ CREATE TABLE IF NOT EXISTS document (
 );
 
 CREATE TABLE IF NOT EXISTS document_text (
-  document_id UUID PRIMARY KEY,
+  document_id UUID            PRIMARY KEY,
   text        TEXT            NOT NULL,
   CONSTRAINT fk_document
     FOREIGN KEY(document_id)

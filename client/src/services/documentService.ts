@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { Document } from '@/types/document';
 
 const documentApi = axios.create({
-  baseURL: '/api/v1/documents',
+  baseURL: `${import.meta.env.VITE_API_URL}/api/v1/documents`,
 });
 
 export async function uploadDocument(file: File): Promise<Document> {
