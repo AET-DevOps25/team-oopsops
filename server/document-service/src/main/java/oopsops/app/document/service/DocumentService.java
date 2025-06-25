@@ -5,7 +5,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import oopsops.app.document.repository.DocumentRepository;
 import oopsops.app.document.entity.Document;
-import oopsops.app.document.entity.DocumentStatus;
 import oopsops.app.document.exception.InvalidFileTypeException;
 import oopsops.app.document.entity.DocumentText;
 

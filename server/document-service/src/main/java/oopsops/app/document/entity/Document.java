@@ -3,27 +3,28 @@ package oopsops.app.document.entity;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Table;
 import jakarta.persistence.CascadeType;
 
-
 @Entity
 @Table(name = "document")
 public class Document {
-    
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(columnDefinition = "UUID")
     private UUID id;
 
-     @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
     @Column(name = "file_name", nullable = false)
@@ -97,6 +98,7 @@ public class Document {
 
     public void setDocumentText(DocumentText documentText) {
         this.documentText = documentText;
+        documentText.setDocument(this);
     }
 
 }

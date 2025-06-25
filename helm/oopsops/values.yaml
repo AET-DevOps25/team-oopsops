@@ -14,10 +14,18 @@ documentService:
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: dev
-  database:
-    url: jdbc:postgresql://document-db:5432/documentdb
-    username: dev_user
-    password: dev_pass
+    - name: SPRING_DATASOURCE_URL
+      value: jdbc:postgresql://document-db:5432/documentdb
+    - name: SPRING_DATASOURCE_USERNAME
+      value: dev_user
+
+document-db:
+  nameOverride: document-db
+  fullnameOverride: document-db
+  postgresqlUsername: dev_user
+  postgresqlDatabase: documentdb
+  service:
+    port: 5432
 
 archiveService:
   image:
