@@ -52,7 +52,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: client
+                name: client-service
                 port:
                   number: {{ .Values.client.service.port }}
 {{- end }}

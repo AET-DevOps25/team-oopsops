@@ -16,13 +16,13 @@ documentService:
       value: dev
     - name: SPRING_DATASOURCE_URL
       value: jdbc:postgresql://document-db:5432/documentdb
-    - name: SPRING_DATASOURCE_USERNAME
-      value: dev_user
 
 document-db:
   nameOverride: document-db
   fullnameOverride: document-db
   postgresqlUsername: dev_user
+  postgresqlPassword: dev_pass
+
   postgresqlDatabase: documentdb
   service:
     port: 5432

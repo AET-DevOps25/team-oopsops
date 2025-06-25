@@ -31,6 +31,8 @@ spec:
             - name: {{ .name }}
               value: "{{ .value }}"
             {{- end }}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "dev_user"
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
