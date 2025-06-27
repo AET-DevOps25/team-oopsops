@@ -52,12 +52,6 @@ jobs:
           docker push ${{ env.DOCUMENT_IMAGE }}:$TAG
           docker push ${{ env.DOCUMENT_IMAGE }}:latest
 
-      - name: Build and Push Archive Service Image
-        run: |
-          docker build -t ${{ env.ARCHIVE_IMAGE }}:$TAG -t ${{ env.ARCHIVE_IMAGE }}:latest -f ${{ env.ARCHIVE_DIR }}/Dockerfile ./server
-          docker push ${{ env.ARCHIVE_IMAGE }}:$TAG
-          docker push ${{ env.ARCHIVE_IMAGE }}:latest
-
       - name: Build and Push Authentication Service Image
         run: |
           docker build -t ${{ env.AUTHENTICATION_IMAGE }}:$TAG -t ${{ env.AUTHENTICATION_IMAGE }}:latest -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
@@ -69,17 +63,3 @@ jobs:
           docker build -t ${{ env.GENAI_IMAGE }}:$TAG -t ${{ env.GENAI_IMAGE }}:latest -f ${{ env.GENAI_DIR }}/Dockerfile ${{ env.GENAI_DIR }}
           docker push ${{ env.GENAI_IMAGE }}:$TAG
           docker push ${{ env.GENAI_IMAGE }}:latest
-
-      # - name: Set up kubeconfig
-      #   run: |
-      #     mkdir -p ~/.kube
-      #     echo "$#{{ secrets.KUBECONFIG }}" > ~/.kube/config
-
-      # - name: Deploy with Helm
-      #   run: |
-      #     helm upgrade --install oopsops helm/oopsops \
-      #       --set documentService.image.tag=$TAG \
-      #       --set archiveService.image.tag=$TAG \
-      #       --set authenticationService.image.tag=$TAG \
-      #       --set client.image.tag=$TAG \
-      #       --set genaiService.image.tag=$TAG

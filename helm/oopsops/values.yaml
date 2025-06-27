@@ -22,24 +22,9 @@ document-db:
   fullnameOverride: document-db
   postgresqlUsername: dev_user
   postgresqlPassword: dev_pass
-
   postgresqlDatabase: documentdb
   service:
     port: 5432
-
-archiveService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/server/archive-service
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
-    port: 8093
-    targetPort: 8093
-  replicaCount: 1
-  env:
-    - name: SPRING_PROFILES_ACTIVE
-      value: dev
 
 authenticationService:
   image:
@@ -81,7 +66,7 @@ ingress:
   enabled: true
   className: "nginx"
   tls: true
-  host: "redacta.student.k8s.aet.cit.tum.de"
+  host: ""
   secretName: "devops25-tls"
   annotations:
     kubernetes.io/ingress.class: "nginx"

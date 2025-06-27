@@ -33,6 +33,11 @@ public class DocumentService {
         return documentRepository.findAll();
     }
 
+    public Document getDocumentById(UUID id) {
+        Document doc = documentRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Document not found: " + id));
+    }
+
     @Transactional
     public Document uploadAndProcess(UUID userId, MultipartFile file) {
 

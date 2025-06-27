@@ -33,13 +33,6 @@ spec:
                 name: authentication-service
                 port:
                   number: {{ .Values.authenticationService.service.port }}
-          - path: /api/v1/archive
-            pathType: Prefix
-            backend:
-              service:
-                name: archive-service
-                port:
-                  number: {{ .Values.archiveService.service.port }}
           - path: /api/v1/genai
             pathType: Prefix
             backend:

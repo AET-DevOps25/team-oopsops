@@ -1,13 +1,5 @@
 DROP TYPE IF EXISTS document_status;
 
-CREATE TYPE document_status AS ENUM (
-  'UPLOADED',
-  'PROCESSED',
-  'ANONYMISED',
-  'SUMMARISED',
-  'ARCHIVED'
-);
-
 CREATE TABLE IF NOT EXISTS document (
   id          UUID            PRIMARY KEY,
   user_id     UUID            NOT NULL,
