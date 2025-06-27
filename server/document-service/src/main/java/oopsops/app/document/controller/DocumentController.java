@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -73,12 +72,4 @@ public class DocumentController {
             .created(URI.create("/api/v1/documents/" + document.getId()))
             .body(dto);
     }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<DocumentDto> getById(@PathVariable UUID id) {
-        DocumentDto dto = documentService.getDocumentById(id);
-        return ResponseEntity.ok(dto);
-    }
-
-
 }

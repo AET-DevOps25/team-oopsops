@@ -8,6 +8,7 @@ import oopsops.app.document.entity.Document;
 import oopsops.app.document.exception.InvalidFileTypeException;
 import oopsops.app.document.entity.DocumentText;
 
+import java.util.Optional;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -33,9 +34,8 @@ public class DocumentService {
         return documentRepository.findAll();
     }
 
-    public Document getDocumentById(UUID id) {
-        Document doc = documentRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Document not found: " + id));
+    public Optional<Document> getDocumentById(UUID id) {
+        return documentRepository.findById(id);
     }
 
     @Transactional
