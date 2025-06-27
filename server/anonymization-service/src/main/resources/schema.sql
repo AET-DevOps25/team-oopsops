@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 
 CREATE TABLE IF NOT EXISTS anonymization (
-  id                   UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+  id                   UUID            PRIMARY KEY,
   document_id          UUID            NOT NULL,
   original_text        TEXT            NOT NULL,
   anonymized_text      TEXT            NOT NULL,

@@ -150,9 +150,6 @@ public class AnonymizationDto {
         }
 
         public Optional<AnonymizationDto> build() {
-            if (id == null) {
-                this.id = UUID.randomUUID();
-            }
             if (created == null) {
                 this.created = OffsetDateTime.now();
             }

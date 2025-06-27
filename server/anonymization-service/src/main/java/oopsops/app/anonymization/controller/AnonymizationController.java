@@ -43,7 +43,6 @@ public class AnonymizationController {
     public ResponseEntity<AnonymizationDto> add(@PathVariable UUID documentId,
                                                 @RequestBody AnonymizationRequestBody requestBody) {
         Optional<AnonymizationDto> optionalDto = new AnonymizationDto.AnonymizationBuilder()
-            .id(UUID.randomUUID())
             .documentId(documentId)
             .originalText(requestBody.originalText())
             .anonymizedText(requestBody.anonymizedText())
