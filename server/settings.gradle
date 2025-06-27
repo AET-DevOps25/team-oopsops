@@ -3,6 +3,5 @@ rootProject.name = 'app'
 include ':common'
 include ':document-service'
 include ':authentication-service'
-include ':archive-service'
 include 'anonymization-service'
 

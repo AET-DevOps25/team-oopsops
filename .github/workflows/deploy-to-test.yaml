@@ -7,11 +7,11 @@ on:
 
 env:
   REPO_OWNER: aet-devops25
-  CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client:latest
-  DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
-  ARCHIVE_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/archive-service:latest
-  AUTHENTICATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
-  GENAI_IMAGE: ghcr.io/aet-devops25/team-oopsops/genai-service:latest
+  CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client
+  DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service
+  ARCHIVE_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/archive-service
+  AUTHENTICATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service
+  GENAI_IMAGE: ghcr.io/aet-devops25/team-oopsops/genai-service
   CLIENT_DIR: ./client
   DOCUMENT_DIR: ./server/document-service
   ARCHIVE_DIR: ./server/archive-service
@@ -30,6 +30,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set image tag
+        run: echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -39,26 +42,24 @@ jobs:
 
       - name: Build and Push Client Image
         run: |
-          docker build -t ${{ env.CLIENT_IMAGE }} ${{ env.CLIENT_DIR }}
-          docker push ${{ env.CLIENT_IMAGE }}
+          docker build -t ${{ env.CLIENT_IMAGE }}:$TAG -t ${{ env.CLIENT_IMAGE }}:latest ${{ env.CLIENT_DIR }}
+          docker push ${{ env.CLIENT_IMAGE }}:$TAG
+          docker push ${{ env.CLIENT_IMAGE }}:latest
 
       - name: Build and Push Document Service Image
         run: |
-          docker build -t ${{ env.DOCUMENT_IMAGE }} -f ${{ env.DOCUMENT_DIR }}/Dockerfile ./server
-          docker push ${{ env.DOCUMENT_IMAGE }}
-
-      - name: Build and Push Archive Service Image
-        run: |
-          docker build -t ${{ env.ARCHIVE_IMAGE }} -f ${{ env.ARCHIVE_DIR }}/Dockerfile ./server
-          docker push ${{ env.ARCHIVE_IMAGE }}
+          docker build -t ${{ env.DOCUMENT_IMAGE }}:$TAG -t ${{ env.DOCUMENT_IMAGE }}:latest -f ${{ env.DOCUMENT_DIR }}/Dockerfile ./server
+          docker push ${{ env.DOCUMENT_IMAGE }}:$TAG
+          docker push ${{ env.DOCUMENT_IMAGE }}:latest
 
       - name: Build and Push Authentication Service Image
         run: |
-          docker build -t ${{ env.AUTHENTICATION_IMAGE }} -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
-          docker push ${{ env.AUTHENTICATION_IMAGE }}
+          docker build -t ${{ env.AUTHENTICATION_IMAGE }}:$TAG -t ${{ env.AUTHENTICATION_IMAGE }}:latest -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
+          docker push ${{ env.AUTHENTICATION_IMAGE }}:$TAG
+          docker push ${{ env.AUTHENTICATION_IMAGE }}:latest
 
       - name: Build and Push GenAI Service Image
         run: |
-          docker build -t ${{ env.GENAI_IMAGE }} -f ${{ env.GENAI_DIR }}/Dockerfile ${{ env.GENAI_DIR }}
-          docker push ${{ env.GENAI_IMAGE }}
-
+          docker build -t ${{ env.GENAI_IMAGE }}:$TAG -t ${{ env.GENAI_IMAGE }}:latest -f ${{ env.GENAI_DIR }}/Dockerfile ${{ env.GENAI_DIR }}
+          docker push ${{ env.GENAI_IMAGE }}:$TAG
+          docker push ${{ env.GENAI_IMAGE }}:latest

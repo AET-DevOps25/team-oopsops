@@ -1,9 +1,10 @@
-
 import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Upload, FileText, X } from "lucide-react";
+import { uploadDocument } from "@/services/documentService";
+import { toast } from "sonner";
 
 const Index = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -12,15 +13,15 @@ const Index = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (file: File) => {
-    const maxSizeInBytes = 20 * 1024 * 1024; // 20MB in bytes
+    const maxSizeInBytes = 20 * 1024 * 1024;
     
     if (file.type !== "application/pdf") {
-      alert("Please select a PDF file only.");
+      toast.error("Please select a PDF file only.");
       return;
     }
     
     if (file.size > maxSizeInBytes) {
-      alert("File size must be less than 20MB. Please select a smaller file.");
+      toast.error("File size must be less than 20MB. Please select a smaller file.");
       return;
     }
     
@@ -57,28 +58,22 @@ const Index = () => {
     if (!selectedFile) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
+    
     try {
-      // TODO: Replace with actual API endpoint
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await uploadDocument(selectedFile)
 
-      if (response.ok) {
-        alert("File uploaded successfully!");
+      if (response.status == "PROCESSED") {
+        toast.success("File uploaded successfully!");
         setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
       } else {
-        alert("Upload failed. Please try again.");
+        toast.error("Upload failed. Please try again.");
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Upload failed. Please try again.");
+      toast.error("Upload failed. Please try again.");
     } finally {
       setIsUploading(false);
     }

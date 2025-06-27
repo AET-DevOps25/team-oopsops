@@ -17,6 +17,8 @@ spec:
         - name: document-service
           image: "{{ .Values.documentService.image.repository }}:{{ .Values.documentService.image.tag }}"
           imagePullPolicy: {{ .Values.documentService.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.documentService.service.targetPort }}
           resources:
             limits:
               cpu: "500m"
@@ -24,16 +26,15 @@ spec:
             requests:
               cpu: "200m"
               memory: "256Mi"
-          ports:
-            - containerPort: {{ .Values.documentService.service.targetPort }}
           env:
             {{- range .Values.documentService.env }}
             - name: {{ .name }}
               value: "{{ .value }}"
             {{- end }}
-            - name: SPRING_DATASOURCE_URL
-              value: "{{ .Values.documentService.database.url }}"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "{{ .Values.documentService.database.username }}"
+              value: "dev_user"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: "{{ .Values.documentService.database.password }}"
+              valueFrom:
+                secretKeyRef:
+                  name: document-db
+                  key: postgres-password
