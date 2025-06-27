@@ -13,25 +13,18 @@ documentService:
   replicaCount: 1
   env:
     - name: SPRING_PROFILES_ACTIVE
-      value: docker
-  database:
-    url: jdbc:postgresql://document-db:5432/documentdb
-    username: dev_user
-    password: dev_pass
+      value: dev
+    - name: SPRING_DATASOURCE_URL
+      value: jdbc:postgresql://document-db:5432/documentdb
 
-archiveService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/server/archive-service
-    tag: latest
-    pullPolicy: Always
+document-db:
+  nameOverride: document-db
+  fullnameOverride: document-db
+  postgresqlUsername: dev_user
+  postgresqlPassword: dev_pass
+  postgresqlDatabase: documentdb
   service:
-    type: ClusterIP
-    port: 8093
-    targetPort: 8093
-  replicaCount: 1
-  env:
-    - name: SPRING_PROFILES_ACTIVE
-      value: docker
+    port: 5432
 
 authenticationService:
   image:
@@ -45,7 +38,7 @@ authenticationService:
   replicaCount: 1
   env:
     - name: SPRING_PROFILES_ACTIVE
-      value: docker
+      value: dev
 
 client:
   image:
@@ -76,4 +69,11 @@ ingress:
   host: ""
   secretName: "devops25-tls"
   annotations:
+    kubernetes.io/ingress.class: "nginx"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS, PUT, DELETE"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization,Content-Type"
+    nginx.ingress.kubernetes.io/cors-max-age: "1728000"

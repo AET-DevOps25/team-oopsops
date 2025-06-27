@@ -5,10 +5,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import oopsops.app.document.repository.DocumentRepository;
 import oopsops.app.document.entity.Document;
-import oopsops.app.document.entity.DocumentStatus;
 import oopsops.app.document.exception.InvalidFileTypeException;
 import oopsops.app.document.entity.DocumentText;
 
+import java.util.Optional;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -32,6 +32,10 @@ public class DocumentService {
 
     public List<Document> getAllDocuments() {
         return documentRepository.findAll();
+    }
+
+    public Optional<Document> getDocumentById(UUID id) {
+        return documentRepository.findById(id);
     }
 
     @Transactional

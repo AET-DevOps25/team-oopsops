@@ -1,25 +1,46 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: "ingress"
+  name: ingress
   namespace: {{ .Release.Namespace }}
-  {{- $annotations := .Values.ingress.annotations | default dict }}
-  {{- if $annotations }}
   annotations:
-    {{- toYaml $annotations | nindent 4 }}
-  {{- end }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
+  ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls }}
   tls:
     - hosts:
-        - {{ include "oopsops.ingress.host" . }}
+        - {{ .Values.ingress.host }}
       secretName: {{ .Values.ingress.secretName }}
   {{- end }}
   rules:
-    - host: {{ include "oopsops.ingress.host" . }}
+    - host: {{ .Values.ingress.host }}
       http:
         paths:
+          # ── API endpoints ─────────────────────────────────────────────
+          - path: /api/v1/documents
+            pathType: Prefix
+            backend:
+              service:
+                name: document-service
+                port:
+                  number: {{ .Values.documentService.service.port }}
+          - path: /api/v1/authentication
+            pathType: Prefix
+            backend:
+              service:
+                name: authentication-service
+                port:
+                  number: {{ .Values.authenticationService.service.port }}
+          - path: /api/v1/genai
+            pathType: Prefix
+            backend:
+              service:
+                name: genai-service
+                port:
+                  number: {{ .Values.genaiService.service.port }}
+          # ── SPA catch-all ────────────────────────────────────────────────
           - path: /
             pathType: Prefix
             backend:
@@ -27,11 +48,4 @@ spec:
                 name: client-service
                 port:
                   number: {{ .Values.client.service.port }}
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: document-service
-                port:
-                  number: {{ .Values.documentService.service.port }}
 {{- end }}
