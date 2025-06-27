@@ -10,6 +10,23 @@ services:
       - client
       - document-service
 
+  postgres:
+    image: postgres:alpine
+    container_name: oopsops-dbs
+    environment:
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./create-multiple-dbs.sh:/docker-entrypoint-initdb.d/create-multiple-dbs.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   document-service:
     image: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
     build:
@@ -19,7 +36,7 @@ services:
       - "8091:8091"
     environment:
       - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://document-db:5432/documentdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/documentdb
       - SPRING_DATASOURCE_USERNAME=dev_user
       - SPRING_DATASOURCE_PASSWORD=dev_pass
     volumes:
@@ -32,23 +49,6 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  document-db:
-    image: postgres:alpine
-    container_name: document-db
-    environment:
-      POSTGRES_DB:       documentdb
-      POSTGRES_USER:     dev_user
-      POSTGRES_PASSWORD: dev_pass
-    ports:
-      - "5432:5432"
-    volumes:
-      - document-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev_user -d anonymizationdb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   anonymization-service:
     image: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service:latest
     build:
@@ -58,7 +58,7 @@ services:
       - "8094:8094"
     environment:
       - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://anonymization-db:5432/anonymizationdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/anonymizationdb
       - SPRING_DATASOURCE_USERNAME=dev_user
       - SPRING_DATASOURCE_PASSWORD=dev_pass
     healthcheck:
@@ -68,23 +68,6 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
-
-  anonymization-db:
-    image: postgres:alpine
-    container_name: anonymization-db
-    environment:
-      POSTGRES_DB:       anonymizationdb
-      POSTGRES_USER:     dev_user
-      POSTGRES_PASSWORD: dev_pass
-    ports:
-      - "5433:5432"
-    volumes:
-      - anonymization-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev_user -d anonymizationdb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   authentication-service:
     image: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
@@ -142,12 +125,10 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - document-db
-      - anonymization-db
+      - postgres
     volumes:
       - pgadmin-data:/var/lib/pgadmin 
 
 volumes:
-  document-db-data:
-  anonymization-db-data:
+  postgres-data:
   pgadmin-data:
