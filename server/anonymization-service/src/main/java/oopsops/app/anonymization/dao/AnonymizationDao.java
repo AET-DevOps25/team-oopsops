@@ -3,16 +3,19 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.annotations.GenericGenerator;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import oopsops.app.anonymization.converter.ChangedTermsConverter;
 import oopsops.app.anonymization.models.ChangedTerm;
 
 @Entity
@@ -39,8 +42,9 @@ public class AnonymizationDao {
     @Column(name =  "anonymization_level")
     private String anonymization_level;
 
-    @Convert(converter = ChangedTermsConverter.class)
-    @Column(name = "changed_terms", columnDefinition = "jsonb", nullable = false)
+    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private List<ChangedTerm> changedTerms;
 
     public AnonymizationDao() {

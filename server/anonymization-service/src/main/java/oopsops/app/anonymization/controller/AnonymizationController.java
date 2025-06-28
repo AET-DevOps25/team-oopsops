@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import oopsops.app.anonymization.dao.AnonymizationDao;
 import oopsops.app.anonymization.dto.AnonymizationDto;
 import oopsops.app.anonymization.models.AnonymizationRequestBody;
+import oopsops.app.anonymization.models.ChangedTerm;
+import oopsops.app.anonymization.models.ReplacementRequest;
 import oopsops.app.anonymization.service.AnonymizationService;
 
 @RestController
@@ -52,5 +54,17 @@ public class AnonymizationController {
         return optionalDto.map(anonymizationDto -> anonymizationService.save(anonymizationDto)
             .map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.internalServerError().build())).orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+
+
+    @PostMapping("/replace")
+    public ResponseEntity<String> anonymizeText(@RequestBody ReplacementRequest request) {
+        String anonymizedText = request.getOriginalText();
+
+        for (ChangedTerm pair : request.getChangedTerms()) {
+            anonymizedText = anonymizedText.replace(pair.getOriginal(), pair.getAnonymized());
+        }
+
+        return ResponseEntity.ok(anonymizedText);
     }
 }

@@ -95,6 +95,8 @@ services:
       - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}  
+      - ANONYMIZATION_SERVICE_URL=http://anonymization-service:8094/api/v1/anonymization
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

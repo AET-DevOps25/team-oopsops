@@ -1,22 +1,30 @@
 package oopsops.app.anonymization.models;
 
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChangedTerm {
-    private List<Term> changedTerms;
+    private String original;
+    private String anonymized;
 
     public ChangedTerm() {
     }
 
-    public List<Term> getChangedTerms() {
-        return changedTerms;
+    public String getOriginal() {
+        return original;
     }
 
-    public void setChangedTerms(final List<Term> changedTerms) {
-        this.changedTerms = changedTerms;
+    public void setOriginal(final String original) {
+        this.original = original;
+    }
+
+    public String getAnonymized() {
+        return anonymized;
+    }
+
+    public void setAnonymized(final String anonymized) {
+        this.anonymized = anonymized;
     }
 }
 

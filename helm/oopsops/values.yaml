@@ -40,6 +40,22 @@ authenticationService:
     - name: SPRING_PROFILES_ACTIVE
       value: dev
 
+anonymizationService:
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8094
+    targetPort: 8094
+  replicaCount: 1
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: dev
+    - name: SPRING_DATASOURCE_URL
+      value: jdbc:postgresql://anonymization-db:5432/anonymizationdb
+
 client:
   image:
     repository: ghcr.io/aet-devops25/team-oopsops/client
@@ -60,6 +76,9 @@ genaiService:
     type: ClusterIP
     port: 8000
     targetPort: 8000
+  env:
+    - name: ANONYMIZATION_SERVICE_URL
+      value: http://anonymization-service:8094/api/v1/anonymization
   replicaCount: 1
 
 ingress:

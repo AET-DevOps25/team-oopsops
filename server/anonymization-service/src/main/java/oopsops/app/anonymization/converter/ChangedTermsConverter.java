@@ -8,35 +8,39 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import oopsops.app.anonymization.models.ChangedTerm;
 
-import java.util.Optional;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+
+import org.postgresql.util.PGobject;
 
 @Converter
-public class ChangedTermsConverter implements AttributeConverter<ChangedTerm, String> {
+public class ChangedTermsConverter implements AttributeConverter<List<ChangedTerm>, Object> {
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public String convertToDatabaseColumn(final ChangedTerm optionValue) {
-        final ObjectMapper mapper = new ObjectMapper();
+    public Object convertToDatabaseColumn(final List<ChangedTerm> changedTerms) {
         try {
-            final ChangedTerm changedTerm = Optional.ofNullable(optionValue)
-                .orElseGet(ChangedTerm::new);
-            return mapper.writeValueAsString(changedTerm);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            PGobject jsonbObj = new PGobject();
+            jsonbObj.setType("jsonb");
+            jsonbObj.setValue(mapper.writeValueAsString(changedTerms));
+            return jsonbObj;
+        } catch (JsonProcessingException | SQLException e) {
+            throw new RuntimeException("Error converting changedTerms to JSON", e);
         }
     }
 
     @Override
-    public ChangedTerm convertToEntityAttribute(final String dbData) {
-        if (dbData == null || dbData.isEmpty()) {
-            return null;
+    public List<ChangedTerm> convertToEntityAttribute(final Object dbData) {
+        if (dbData == null) {
+            return Collections.emptyList();
         }
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
-            return mapper.readValue(dbData, ChangedTerm.class);
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            String json = dbData.toString();
+            return mapper.readValue(json, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error reading changedTerms JSON", e);
         }
     }
 }
