@@ -1,4 +1,4 @@
-package oopsops.app.anonymization.dao;
+package oopsops.app.anonymization.entity;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +20,7 @@ import oopsops.app.anonymization.models.ChangedTerm;
 
 @Entity
 @Table(name = "anonymization")
-public class AnonymizationDao {
+public class AnonymizationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -47,7 +47,7 @@ public class AnonymizationDao {
     @Column(columnDefinition = "jsonb")
     private List<ChangedTerm> changedTerms;
 
-    public AnonymizationDao() {
+    public AnonymizationEntity() {
 
     }
 
@@ -107,7 +107,7 @@ public class AnonymizationDao {
         this.created = created;
     }
 
-    public AnonymizationDao(final UUID id, final OffsetDateTime created, final UUID documentId, final String originalText, final String anonymizedText, final String anonymization_level, final List<ChangedTerm> changedTerms) {
+    public AnonymizationEntity(final UUID id, final OffsetDateTime created, final UUID documentId, final String originalText, final String anonymizedText, final String anonymization_level, final List<ChangedTerm> changedTerms) {
         this.id = id;
         this.created = created;
         this.documentId = documentId;

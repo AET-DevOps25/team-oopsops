@@ -1,5 +1,3 @@
--- enable pgcrypto UUIDs
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 
 CREATE TABLE IF NOT EXISTS anonymization (

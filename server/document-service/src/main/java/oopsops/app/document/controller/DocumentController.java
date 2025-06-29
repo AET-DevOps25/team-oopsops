@@ -74,11 +74,5 @@ public class DocumentController {
             .body(dto);
     }
 
-    /*@PostMapping("/{documentId}/anonymize-auto")
-    public ResponseEntity<DocumentDto> autoAnonymize(@PathVariable UUID documentId,
-                                                     @RequestParam String level) {
-        DocumentDto result = documentService.autoAnonymize(documentId, level);
-        return ResponseEntity.ok(result);
-    }*/
 
 }
