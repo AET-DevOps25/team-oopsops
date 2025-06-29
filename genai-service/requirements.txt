@@ -5,3 +5,9 @@ langchain-openai==0.3.23
 langgraph==0.4.8
 python-dotenv==1.1.0
 pydantic==2.11.7
+chromadb
+langchain-community
+langchain-chroma
+pypdf
+python-multipart
+tiktoken

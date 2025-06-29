@@ -25,6 +25,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
+# Create directory for ChromaDB persistence
+RUN mkdir -p /app/chroma_db && chmod 777 /app/chroma_db
+
 # Expose port (default for FastAPI)
 EXPOSE 8000
 
