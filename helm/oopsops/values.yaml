@@ -12,19 +12,30 @@ documentService:
     targetPort: 8091
   replicaCount: 1
   env:
-    - name: SPRING_PROFILES_ACTIVE
-      value: dev
     - name: SPRING_DATASOURCE_URL
-      value: jdbc:postgresql://document-db:5432/documentdb
+      value: jdbc:postgresql://postgres:5432/documentdb
+    - name: SPRING_DATASOURCE_USERNAME
+      value: dev_user
+    - name: SPRING_DATASOURCE_PASSWORD
+      value: dev_pass
 
-document-db:
-  nameOverride: document-db
-  fullnameOverride: document-db
-  postgresqlUsername: dev_user
-  postgresqlPassword: dev_pass
-  postgresqlDatabase: documentdb
-  service:
-    port: 5432
+postgresql:
+  enabled: true
+  auth:
+    username: dev_user
+    password: dev_pass
+    database: documentdb  
+  initdbScripts:
+    create-multiple-dbs.sh: |
+      #!/bin/bash
+      set -e
+      echo "Creating multiple databases..."
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+          CREATE DATABASE documentdb;
+          CREATE DATABASE anonymizationdb;
+      EOSQL
+      echo "Databases created!"
+
 
 authenticationService:
   image:
@@ -39,6 +50,24 @@ authenticationService:
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: dev
+
+anonymizationService:
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service
+    tag: latest
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8094
+    targetPort: 8094
+  replicaCount: 1
+  env:
+    - name: SPRING_DATASOURCE_URL
+      value: jdbc:postgresql://postgres:5432/anonymizationdb
+    - name: SPRING_DATASOURCE_USERNAME
+      value: dev_user
+    - name: SPRING_DATASOURCE_PASSWORD
+      value: dev_pass
 
 client:
   image:
@@ -60,6 +89,9 @@ genaiService:
     type: ClusterIP
     port: 8000
     targetPort: 8000
+  env:
+    - name: ANONYMIZATION_SERVICE_URL
+      value: http://anonymization-service:8094/api/v1/anonymization
   replicaCount: 1
 
 ingress:
