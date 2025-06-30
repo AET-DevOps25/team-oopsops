@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import oopsops.app.anonymization.dao.AnonymizationDao;
+import oopsops.app.anonymization.entity.AnonymizationEntity;
 import oopsops.app.anonymization.dto.AnonymizationDto;
 import oopsops.app.anonymization.repository.AnonymizationRepository;
 
@@ -17,14 +17,12 @@ public class AnonymizationService {
         this.anonymizationRepository = anonymizationRepository;
     }
 
-    public List<AnonymizationDao> getAllAnonymizations() {
+    public List<AnonymizationEntity> getAllAnonymizations() {
         return anonymizationRepository.findAll();
     }
 
-    public Optional<AnonymizationDto> save(AnonymizationDto dto) {
+    public AnonymizationDto save(AnonymizationDto dto) {
 
-        return AnonymizationDto.AnonymizationBuilder
-            .fromDao(anonymizationRepository.save(dto.toDao()))
-            .build();
+        return AnonymizationDto.fromDao(anonymizationRepository.save(dto.toDao()));
     }
 }

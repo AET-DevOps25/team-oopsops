@@ -1,5 +1,9 @@
 package oopsops.app.anonymization.controller;
 
+<<<<<<< HEAD
+=======
+import java.time.OffsetDateTime;
+>>>>>>> main
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,9 +18,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.RestController;
 
+<<<<<<< HEAD
 import oopsops.app.anonymization.dao.AnonymizationDao;
 import oopsops.app.anonymization.dto.AnonymizationDto;
 import oopsops.app.anonymization.models.AnonymizationRequestBody;
+=======
+import oopsops.app.anonymization.entity.AnonymizationEntity;
+import oopsops.app.anonymization.dto.AnonymizationDto;
+import oopsops.app.anonymization.models.AnonymizationRequestBody;
+import oopsops.app.anonymization.models.ChangedTerm;
+import oopsops.app.anonymization.models.ReplacementRequest;
+>>>>>>> main
 import oopsops.app.anonymization.service.AnonymizationService;
 
 @RestController
@@ -29,6 +41,7 @@ public class AnonymizationController {
         this.anonymizationService = anonymizationService;
     }
 
+<<<<<<< HEAD
     @GetMapping
     public ResponseEntity<List<AnonymizationDto>> getAllAnonymizations() {
         List<AnonymizationDao> anonymizationDaos = anonymizationService.getAllAnonymizations();
@@ -52,5 +65,43 @@ public class AnonymizationController {
         return optionalDto.map(anonymizationDto -> anonymizationService.save(anonymizationDto)
             .map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.internalServerError().build())).orElseGet(() -> ResponseEntity.badRequest().build());
+=======
+
+    @GetMapping
+    public ResponseEntity<List<AnonymizationDto>> getAllAnonymizations() {
+        List<AnonymizationDto> anonymizationDtos = anonymizationService.getAllAnonymizations().stream()
+            .map(AnonymizationDto::fromDao)
+            .toList();
+        return ResponseEntity.ok(anonymizationDtos);
+    }
+
+
+        @PostMapping("/{documentId}/add")
+        public ResponseEntity<AnonymizationDto> add(@PathVariable UUID documentId,
+            @RequestBody AnonymizationRequestBody requestBody) {
+            AnonymizationDto dto = new AnonymizationDto(
+                UUID.randomUUID(),
+                OffsetDateTime.now(),
+                documentId,
+                requestBody.originalText(),
+                requestBody.anonymizedText(),
+                requestBody.level(),
+                requestBody.changedTerms()
+            );
+            AnonymizationDto savedDto = anonymizationService.save(dto);
+            return ResponseEntity.ok(savedDto);
+        }
+
+
+    @PostMapping("/replace")
+    public ResponseEntity<String> anonymizeText(@RequestBody ReplacementRequest request) {
+        String anonymizedText = request.getOriginalText();
+
+        for (ChangedTerm pair : request.getChangedTerms()) {
+            anonymizedText = anonymizedText.replace(pair.getOriginal(), pair.getAnonymized());
+        }
+
+        return ResponseEntity.ok(anonymizedText);
+>>>>>>> main
     }
 }

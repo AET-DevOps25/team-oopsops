@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -73,11 +74,5 @@ public class DocumentController {
             .body(dto);
     }
 
-    /*@PostMapping("/{documentId}/anonymize-auto")
-    public ResponseEntity<DocumentDto> autoAnonymize(@PathVariable UUID documentId,
-                                                     @RequestParam String level) {
-        DocumentDto result = documentService.autoAnonymize(documentId, level);
-        return ResponseEntity.ok(result);
-    }*/
 
 }
