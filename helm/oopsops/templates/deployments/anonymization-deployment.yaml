@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anonymization-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.anonymizationService.replicaCount }}
+  selector:
+    matchLabels:
+      app: anonymization-service
+  template:
+    metadata:
+      labels:
+        app: anonymization-service
+    spec:
+      containers:
+        - name: anonymization-service
+          image: "{{ .Values.anonymizationService.image.repository }}:{{ .Values.anonymizationService.image.tag }}"
+          imagePullPolicy: {{ .Values.anonymizationService.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.anonymizationService.service.targetPort }}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          env:
+            {{- range .Values.anonymizationService.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
+            
