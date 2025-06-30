@@ -40,7 +40,7 @@ public record AnonymizationDto(
         entity.setChangedTerms(changedTerms);
         return entity;
     }
-    }
 }
+
 
 
