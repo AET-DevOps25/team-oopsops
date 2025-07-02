@@ -14,7 +14,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: AWS
+      name: oopsops
       url: 'https://${{ vars.CLIENT_HOST }}'
     steps:
       - name: Checkout Code
