@@ -4,13 +4,24 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Upload, FileText, X } from "lucide-react";
 import { uploadDocument } from "@/services/documentService";
+import { anonymizeDocument } from "@/services/genaiService";
+import { summarize } from "@/services/genaiService";
 import { toast } from "sonner";
+import LevelSlider from "@/components/LevelSlider";
+
 
 const Index = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedDoc, setUploadedDoc] = useState<Document | null>(null);
+  const [originalText, setOriginalText] = useState<string>("");
+  const [level, setLevel] = useState(2);
+  const [anonymizedText, setAnonymizedText] = useState<string | null>(null);
+  const [isAnonymizing, setIsAnonymizing] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
 
   const handleFileSelect = (file: File) => {
     const maxSizeInBytes = 20 * 1024 * 1024;
@@ -64,6 +75,8 @@ const Index = () => {
 
       if (response.status == "PROCESSED") {
         toast.success("File uploaded successfully!");
+        setUploadedDoc(response);
+        setOriginalText(response.documentText || "");
         setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
@@ -85,6 +98,45 @@ const Index = () => {
       fileInputRef.current.value = "";
     }
   };
+
+  const getLevelName = (value: number) => {
+  return value === 1 ? "low" : value === 2 ? "medium" : "high";
+};
+
+
+  const handleAnonymize = async () => {
+    setIsAnonymizing(true);
+  try {
+    const result = await anonymizeDocument(originalText, getLevelName(level));
+    console.log(result.reponseText);
+    setAnonymizedText(result);
+    toast.success("Anonymization complete!");
+  } catch (err) {
+    toast.error("Anonymization failed.");
+  }
+  finally{
+    setIsAnonymizing(false);
+  }
+};
+
+const handleSummarize = async () => {
+  setIsSummarizing(true);
+  try {
+    const result = await summarize(originalText, getLevelName(level));
+    toast.success("Summarization complete!");
+    console.log(result.reponseText); 
+  } catch (err) {
+    toast.error("Summarization failed.");
+  }
+  finally{
+    setIsSummarizing(false);
+  }
+};
+
+const canProcess = uploadedDoc && originalText.length > 0;
+
+
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -165,18 +217,34 @@ const Index = () => {
                 </Button>
               </div>
             )}
+
+            {uploadedDoc && originalText && (
+              <div className="flex gap-4 justify-center mt-6">
+                <Button 
+                onClick={handleAnonymize}
+                disabled={isAnonymizing}>Anonymize
+                {isAnonymizing ? "Anonymizing..." : "Anonymize Document"}
+                </Button>
+                <Button onClick={handleSummarize} variant="outline"
+                disabled={isSummarizing}>Summarize
+                {isSummarizing ? "Summarizing..." : "Summarize Document"}</Button>
+              </div>
+            )}
             
             <p className="text-sm text-muted-foreground mt-4">
               Supported format: PDF (Max size: 20MB)
             </p>
           </div>
+          <LevelSlider level={level} setLevel={setLevel} />
           
           <Link to="/archive">
             <Button variant="outline">View Document Archive</Button>
           </Link>
         </div>
       </main>
+      
     </div>
+
   );
 };
 

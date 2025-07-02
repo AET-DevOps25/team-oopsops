@@ -9,5 +9,6 @@ public record DocumentDto(
     String fileName,
     String fileUrl,
     String status,
-    Instant uploadDate
+    Instant uploadDate,
+    String documentText
 ) {}

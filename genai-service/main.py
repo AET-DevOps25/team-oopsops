@@ -17,7 +17,7 @@ def health_check():
     return {"status": "ok"}
 
 
-@app.post("/anonymize", response_model=GenAiResponse)
+@app.post("/api/v1/genai/anonymize", response_model=GenAiResponse)
 def anonymize(request: AnonymizeRequest):
     result = anonymizer_graph.invoke({
         "messages": [{"role": "user", "content": request.originalText}],
@@ -47,7 +47,7 @@ def call_anonymization_service(original_text: str, changed_terms: list[dict]) ->
     except requests.RequestException as e:
         raise RuntimeError(f"Failed to call anonymization service: {e}")
 
-@app.post("/summarize", response_model=GenAiResponse)
+@app.post("/api/v1/genai/summarize", response_model=GenAiResponse)
 def summarize(request: SummarizeRequest):
     result = summarizer_graph.invoke({
         "messages": [{"role": "user", "content": request.originalText}],
@@ -56,7 +56,7 @@ def summarize(request: SummarizeRequest):
     })
     return GenAiResponse(reponseText=result["summarized_text"])
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/api/v1/genai/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     messages = []
     if request.document:
