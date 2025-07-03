@@ -1,30 +1,28 @@
-"use client";
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "@/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { loginUser } from "@/services/authService";
+import { toast } from "sonner";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     try {
       const token = await loginUser({ username, password });
-      localStorage.setItem("access_token", token);
+      login(token);
       navigate("/");
     } catch (err) {
-      setError("Invalid credentials. Please try again.");
+      toast.error("Invalid credentials. Please try again.");
     }
   };
 
@@ -32,14 +30,9 @@ export default function LoginForm() {
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
       <Card className="w-full max-w-md shadow-md border p-6">
         <CardContent>
-          <h2 className="text-2xl font-semibold text-center mb-6">Login to Redacta</h2>
-
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          <h2 className="text-2xl font-semibold text-center mb-6">
+            Login to Redacta
+          </h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
