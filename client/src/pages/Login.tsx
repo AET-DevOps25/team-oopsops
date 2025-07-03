@@ -39,7 +39,7 @@ export default function LoginForm() {
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                placeholder="testuser"
+                placeholder="johndoe"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required

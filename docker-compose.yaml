@@ -113,8 +113,6 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-      args:
-        VITE_API_URL: http://localhost:8081
     ports:
       - "3000:80"
     restart: unless-stopped

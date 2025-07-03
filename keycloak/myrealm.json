@@ -52,6 +52,7 @@
       "secret": "backend-secret",
       "publicClient": false,
       "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [],
       "standardFlowEnabled": true,

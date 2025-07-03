@@ -26,4 +26,14 @@ public class UserService {
         user.setEmail(email);
         repository.save(user);
     }
+
+    @Transactional
+    public String loginWithPassword(String username, String password) {
+        if (repository.findByUsername(username).isEmpty()) {
+            throw new IllegalArgumentException("User does not exist. Please register first.");
+        }
+
+        return keycloakService.getAccessToken(username, password);
+    }
+
 }
