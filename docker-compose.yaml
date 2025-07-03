@@ -117,8 +117,6 @@ services:
         VITE_API_URL: http://localhost:8081
     ports:
       - "3000:80"
-    depends_on:
-      - document-service
     restart: unless-stopped
 
   pgadmin:
@@ -133,21 +131,6 @@ services:
       - postgres
     volumes:
       - pgadmin-data:/var/lib/pgadmin 
-
-  # keycloak:
-  #   image: quay.io/keycloak/keycloak:22.0.3
-  #   command: start-dev
-  #   ports:
-  #     - "8085:8080"
-  #   environment:
-  #     KEYCLOAK_ADMIN: admin
-  #     KEYCLOAK_ADMIN_PASSWORD: admin
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8080/realms/master"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak:22.0.3
