@@ -2,6 +2,10 @@ import { registerUser } from "@/services/authService";
 import { useState, FormEvent } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 type RegistrationData = {
   username: string;
@@ -16,6 +20,8 @@ export default function Register() {
     password: "",
   });
 
+  const navigate = useNavigate();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -23,9 +29,11 @@ export default function Register() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-        const response = await registerUser(form);
-        console.log("res: ", response);
+        await registerUser(form);
         toast.success("Registration successful! Redirecting...");
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
     } catch (err) {
       console.error(err);
       toast.error("Network error");
@@ -33,40 +41,59 @@ export default function Register() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-8">
-      <h1 className="text-xl font-bold mb-4">Register</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-64">
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          className="border p-2"
-          value={form.username}
-          onChange={handleChange}
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="border p-2"
-          value={form.email}
-          onChange={handleChange}
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="border p-2"
-          value={form.password}
-          onChange={handleChange}
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white rounded p-2 hover:bg-blue-700"
-        >
-          Register
-        </button>
-      </form>
+    <div className="flex items-center justify-center min-h-screen bg-white px-4">
+      <Card className="w-full max-w-md shadow-md border p-6">
+        <CardContent>
+          <h2 className="text-2xl font-bold text-center mb-4">Create your Redacta account</h2>
+          <p className="text-muted-foreground text-center mb-6">
+            Join to securely anonymize and summarize your documents.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                placeholder="johndoe"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="johndoe@example.com"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full">
+              Register
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
