@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { loginUser } from "@/services/authService";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
@@ -22,7 +23,24 @@ export default function LoginForm() {
       login(token);
       navigate("/");
     } catch (err) {
-      toast.error("Invalid credentials. Please try again.");
+      const error = err as AxiosError<{ message: string }>;
+
+      if (error.response) {
+        const { status, data } = error.response;
+        if (status === 404) {
+          toast.error(data.message || "User not found. Please register first.");
+        } else if (status === 401) {
+          toast.error(data.message || "Invalid credentials. Please try again.");
+        } else {
+          toast.error(data.message || "Login failed. Please try again.");
+        }
+      } else if (error.request) {
+        toast.error("No response from server. Please check your connection.");
+      } else {
+        toast.error("Unexpected error. Please try again.");
+      }
+
+      console.error(error);
     }
   };
 
@@ -62,6 +80,19 @@ export default function LoginForm() {
               Sign In
             </Button>
           </form>
+
+          <div className="mt-4 text-center">
+            <span className="text-sm text-gray-600">
+              Not yet registered?{" "}
+              <button
+                type="button"
+                className="text-blue-600 hover:underline font-medium"
+                onClick={() => navigate("/register")}
+              >
+                Register here
+              </button>
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>
