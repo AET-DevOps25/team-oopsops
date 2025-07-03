@@ -3,8 +3,6 @@ package oopsops.app.anonymization.models;
 import java.util.List;
 import java.util.Objects;
 
-import oopsops.app.anonymization.models.ChangedTerm;
-
 public record AnonymizationRequestBody(
     String originalText,
     String anonymizedText,
