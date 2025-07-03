@@ -1,5 +1,3 @@
-
-
 CREATE TABLE IF NOT EXISTS anonymization (
   id                   UUID            PRIMARY KEY,
   document_id          UUID            NOT NULL,

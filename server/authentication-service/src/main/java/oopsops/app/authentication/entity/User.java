@@ -13,11 +13,12 @@ import jakarta.persistence.Table;
 public class User {
 
     @Id
-    private UUID id; // this is Keycloak's userId
+    private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name= "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
     @Column(name = "created_at")
