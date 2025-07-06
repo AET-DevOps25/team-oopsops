@@ -2,7 +2,6 @@ package oopsops.app.anonymization;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication(exclude = {
     org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration.class

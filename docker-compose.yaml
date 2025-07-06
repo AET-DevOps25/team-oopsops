@@ -9,6 +9,7 @@ services:
     depends_on:
       - client
       - document-service
+      - authentication-service
 
   postgres:
     image: postgres:alpine
@@ -77,14 +78,16 @@ services:
     ports:
       - "8092:8092"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/authdb
+      - SPRING_DATASOURCE_USERNAME=dev_user
+      - SPRING_DATASOURCE_PASSWORD=dev_pass
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8092/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   
   genai-service:
     image: ghcr.io/aet-devops25/team-oopsops/genai-service:latest
@@ -110,12 +113,8 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-      args:
-        VITE_API_URL: http://localhost:8081
     ports:
       - "3000:80"
-    depends_on:
-      - document-service
     restart: unless-stopped
 
   pgadmin:
@@ -130,6 +129,20 @@ services:
       - postgres
     volumes:
       - pgadmin-data:/var/lib/pgadmin 
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.3
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8085:8080"
+    restart: unless-stopped
+
+
 
 volumes:
   postgres-data:
