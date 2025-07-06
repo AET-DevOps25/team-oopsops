@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { toast } from '@/hooks/use-toast';
-import { DocumentContent } from '@/data/mockDocument';
+import { useState } from "react";
+import { toast } from "sonner";
+import { DocumentContent } from "@/data/mockDocument";
 
 export const useAnonymization = (
   documentData: DocumentContent,
@@ -15,16 +15,14 @@ export const useAnonymization = (
   };
 
   const handleAnonymize = () => {
-    toast({
-      title: 'Processing document',
-      description: 'Anonymizing document based on selected parameters...',
+    toast.info("Processing document", {
+      description: "Anonymizing document based on selected parameters...",
     });
 
     setTimeout(() => {
       setIsAnonymized(true);
-      toast({
-        title: 'Anonymization complete',
-        description: 'Your document has been anonymized successfully.',
+      toast.success("Anonymization complete", {
+        description: "Your document has been anonymized successfully.",
       });
     }, 2000);
   };
@@ -32,13 +30,13 @@ export const useAnonymization = (
   const getLevelDescription = (level: number) => {
     switch (level) {
       case 1:
-        return 'Light - Only names and direct identifiers';
+        return "Light - Only names and direct identifiers";
       case 2:
-        return 'Medium - Names, contact details, and locations';
+        return "Medium - Names, contact details, and locations";
       case 3:
-        return 'Heavy - All potential personal and sensitive information';
+        return "Heavy - All potential personal and sensitive information";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -51,7 +49,7 @@ export const useAnonymization = (
     const newDocumentData = { ...documentData };
 
     // Check if this is a new item or editing existing
-    if (currentEditItem.id.startsWith('new-')) {
+    if (currentEditItem.id.startsWith("new-")) {
       // Find the paragraph containing the text and add new sensitive item
       for (let i = 0; i < newDocumentData.content.length; i++) {
         if (
@@ -83,16 +81,14 @@ export const useAnonymization = (
     setDocumentData(newDocumentData);
     setHasManualEdits(true);
 
-    toast({
-      title: 'Edit saved',
-      description: 'The changes to anonymized text have been applied.',
+    toast.success("Edit saved", {
+      description: "The changes to anonymized text have been applied.",
     });
   };
 
-  const handleDownload = (type: 'anonymized' | 'summary') => {
-    toast({
-      title: `Downloading ${type} document`,
-      description: 'Your file will download shortly.',
+  const handleDownload = (type: "anonymized" | "summary") => {
+    toast.info(`Downloading ${type} document`, {
+      description: "Your file will download shortly.",
     });
   };
 
