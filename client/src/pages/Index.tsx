@@ -1,30 +1,33 @@
-import React, { useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
-import { Upload, FileText, X } from "lucide-react";
-import { uploadDocument } from "@/services/documentService";
-import { toast } from "sonner";
+import React, { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import Navbar from '@/components/Navbar';
+import { Upload, FileText, X } from 'lucide-react';
+import { uploadDocument } from '@/services/documentService';
+import { toast } from 'sonner';
 
 const Index = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const handleFileSelect = (file: File) => {
     const maxSizeInBytes = 20 * 1024 * 1024;
-    
-    if (file.type !== "application/pdf") {
-      toast.error("Please select a PDF file only.");
+
+    if (file.type !== 'application/pdf') {
+      toast.error('Please select a PDF file only.');
       return;
     }
-    
+
     if (file.size > maxSizeInBytes) {
-      toast.error("File size must be less than 20MB. Please select a smaller file.");
+      toast.error(
+        'File size must be less than 20MB. Please select a smaller file.'
+      );
       return;
     }
-    
+
     setSelectedFile(file);
   };
 
@@ -54,60 +57,71 @@ const Index = () => {
     }
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) return;
+  // TODO: Uncomment this section when the uploadDocument function is implemented
+  // TODO: Clicking the upload button should also navigate to the editor page
+  // const handleUpload = async () => {
+  //   if (!selectedFile) return;
 
-    setIsUploading(true);
-    
-    try {
-      const response = await uploadDocument(selectedFile)
+  //   setIsUploading(true);
 
-      if (response.status == "PROCESSED") {
-        toast.success("File uploaded successfully!");
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      } else {
-        toast.error("Upload failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Upload failed. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
+  //   try {
+  //     const response = await uploadDocument(selectedFile)
+
+  //     if (response.status == "PROCESSED") {
+  //       toast.success("File uploaded successfully!");
+  //       setSelectedFile(null);
+  //       if (fileInputRef.current) {
+  //         fileInputRef.current.value = "";
+  //       }
+  //     } else {
+  //       toast.error("Upload failed. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Upload error:", error);
+  //     toast.error("Upload failed. Please try again.");
+  //   } finally {
+  //     setIsUploading(false);
+  //   }
+  // };
+
+  // TODO: For now, we will just navigate to the editor page, but later we remove this for the function above
+  const handleUpload = () => {
+    const documentInfo = JSON.parse(
+      sessionStorage.getItem('currentDocument') || '{}'
+    );
+    navigate(`/editor`);
   };
 
   const removeFile = () => {
     setSelectedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl font-bold mb-4">Welcome to Redacta</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Securely anonymize and summarize your documents with advanced AI technology
+            Securely anonymize and summarize your documents with advanced AI
+            technology
           </p>
-          
+
           <div className="glass-panel p-8 mb-8">
             <h2 className="text-2xl font-semibold mb-4">Upload a Document</h2>
             <p className="mb-6 text-muted-foreground">
               Select a PDF file to upload for anonymization or summarization
             </p>
-            
-            <div 
+
+            <div
               className={`border-2 border-dashed rounded-lg p-8 transition-colors ${
-                isDragOver 
-                  ? "border-primary bg-primary/5" 
-                  : "border-muted-foreground/25 hover:border-primary/50"
+                isDragOver
+                  ? 'border-primary bg-primary/5'
+                  : 'border-muted-foreground/25 hover:border-primary/50'
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -143,7 +157,7 @@ const Index = () => {
                   </Button>
                 </div>
               )}
-              
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -152,25 +166,25 @@ const Index = () => {
                 className="hidden"
               />
             </div>
-            
+
             {selectedFile && (
               <div className="mt-6">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   onClick={handleUpload}
                   disabled={isUploading}
                   className="w-full sm:w-auto"
                 >
-                  {isUploading ? "Uploading..." : "Upload Document"}
+                  {isUploading ? 'Uploading...' : 'Upload Document'}
                 </Button>
               </div>
             )}
-            
+
             <p className="text-sm text-muted-foreground mt-4">
               Supported format: PDF (Max size: 20MB)
             </p>
           </div>
-          
+
           <Link to="/archive">
             <Button variant="outline">View Document Archive</Button>
           </Link>

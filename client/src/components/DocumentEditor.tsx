@@ -1,0 +1,143 @@
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { mockDocument, DocumentContent } from '@/data/mockDocument';
+import { useAnonymization } from '@/hooks/useAnonymization';
+import { useSummarization } from '@/hooks/useSummarization';
+import AnonymizationPanel from './AnonymizationPanel';
+import SummarizationPanel from './SummarizationPanel';
+import EditAnonymizedDialog from './EditAnonymizedDialog';
+
+type DocumentEditorProps = {
+  documentId?: string | null;
+};
+
+const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
+  const [activeTab, setActiveTab] = useState('anonymize');
+  const [documentData, setDocumentData] = useState<DocumentContent>({
+    ...mockDocument,
+  });
+  const [selectedText, setSelectedText] = useState<string>('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentEditItem, setCurrentEditItem] = useState<{
+    id: string;
+    text: string;
+    replacement: string;
+  } | null>(null);
+  const [tempReplacement, setTempReplacement] = useState('');
+
+  // Custom hooks
+  const {
+    anonymizationLevel,
+    isAnonymized,
+    hasManualEdits,
+    handleAnonymizationLevelChange,
+    handleAnonymize,
+    getLevelDescription,
+    handleSaveEdit,
+    handleDownload,
+  } = useAnonymization(documentData, setDocumentData);
+
+  const { isSummarizing, summary, handleGenerateSummary } = useSummarization(
+    documentData.summary
+  );
+
+  useEffect(() => {
+    console.log('Fetching document with ID:', documentId);
+
+    const documentInfo = sessionStorage.getItem('currentDocument');
+    if (documentInfo) {
+      const parsedInfo = JSON.parse(documentInfo);
+      console.log('Current document info:', parsedInfo);
+    }
+  }, [documentId]);
+
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) {
+      setSelectedText(selection.toString().trim());
+
+      if (selection.toString().trim().length > 0) {
+        setCurrentEditItem({
+          id: `new-${Date.now()}`,
+          text: selection.toString().trim(),
+          replacement: '[REDACTED]',
+        });
+        setTempReplacement('[REDACTED]');
+        setEditDialogOpen(true);
+      }
+    }
+  };
+
+  const handleEditItem = (item: {
+    id: string;
+    text: string;
+    replacement: string;
+  }) => {
+    setCurrentEditItem(item);
+    setTempReplacement(item.replacement);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEditInternal = () => {
+    if (!currentEditItem) return;
+    handleSaveEdit(currentEditItem, tempReplacement);
+    setEditDialogOpen(false);
+    setCurrentEditItem(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditDialogOpen(false);
+    setCurrentEditItem(null);
+  };
+
+  return (
+    <div className="w-full">
+      <Tabs
+        defaultValue="anonymize"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        <TabsList className="mb-6">
+          <TabsTrigger value="anonymize">Anonymize</TabsTrigger>
+          <TabsTrigger value="summarize">Summarize</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="anonymize">
+          <AnonymizationPanel
+            anonymizationLevel={anonymizationLevel}
+            isAnonymized={isAnonymized}
+            hasManualEdits={hasManualEdits}
+            documentData={documentData}
+            onAnonymizationLevelChange={handleAnonymizationLevelChange}
+            onAnonymize={handleAnonymize}
+            onDownload={handleDownload}
+            onTextSelection={handleTextSelection}
+            onEditItem={handleEditItem}
+            getLevelDescription={getLevelDescription}
+          />
+        </TabsContent>
+
+        <TabsContent value="summarize">
+          <SummarizationPanel
+            isSummarizing={isSummarizing}
+            summary={summary}
+            onGenerateSummary={handleGenerateSummary}
+            onDownload={handleDownload}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <EditAnonymizedDialog
+        isOpen={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        currentEditItem={currentEditItem}
+        tempReplacement={tempReplacement}
+        onReplacementChange={setTempReplacement}
+        onSave={handleSaveEditInternal}
+        onCancel={handleCancelEdit}
+      />
+    </div>
+  );
+};
+
+export default DocumentEditor;
