@@ -2,7 +2,6 @@ package oopsops.app.anonymization.dto;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import oopsops.app.anonymization.entity.AnonymizationEntity;
@@ -41,6 +40,3 @@ public record AnonymizationDto(
         return entity;
     }
 }
-
-
-
