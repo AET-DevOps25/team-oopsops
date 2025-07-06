@@ -73,24 +73,4 @@ public class DocumentService {
         return documentRepository.save(doc);
     }
 
-    /*public DocumentDto autoAnonymize(UUID documentId, String level) {
-        Document document = documentRepository.findById(documentId)
-            .orElseThrow(() -> new RuntimeException("Document not found"));
-
-        if (document.getDocumentText() == null) {
-            throw new RuntimeException("Document has no extracted text.");
-        }
-
-        AnonymizeRequest request = new AnonymizeRequest();
-        request.setOriginalText(document.getDocumentText().getText());
-        request.setLevel(level);
-
-        GenAiResponse response = genAiClient.anonymize(request);
-
-        document.setAnonymizedText(response.getReponseText());
-        documentRepository.save(document);
-
-        return new DocumentDto(document);
-    }*/
-
 }
