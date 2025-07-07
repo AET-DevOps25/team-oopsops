@@ -1,0 +1,21 @@
+image:
+  repository: postgres
+  tag: alpine
+  pullPolicy: IfNotPresent
+
+postgresql:
+  username: dev_user      # default superuser
+  password: dev_pass      # default password (override via Secret in prod)
+  # database: oopsopsdb  # optional: single DB if needed
+
+persistence:
+  enabled: true
+  storageClass: ""       # leave empty for default StorageClass
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+service:
+  type: ClusterIP
+  port: 5432
+  targetPort: 5432

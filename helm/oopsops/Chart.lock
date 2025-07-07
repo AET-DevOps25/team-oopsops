@@ -1,0 +1,15 @@
+dependencies:
+- name: postgresql
+  repository: file://charts/postgresql
+  version: 0.1.0
+- name: keycloak
+  repository: file://charts/keycloak
+  version: 0.1.0
+- name: document-service
+  repository: file://charts/document-service
+  version: 0.1.0
+- name: authentication-service
+  repository: file://charts/authentication-service
+  version: 0.1.0
+digest: sha256:b5519abc74649f588e89abcd36144a167f304d1035e95de54a73e9f66d12befb
+generated: "2025-07-03T13:05:00.7004572+02:00"

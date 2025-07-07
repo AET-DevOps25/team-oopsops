@@ -1,0 +1,24 @@
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "22.0.3"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+# Admin credentials (override with Secret in prod)
+admin:
+  user: admin
+  password: admin
+
+# External Postgres settings
+postgresql:
+  host: postgresql-oopsops-app
+  port: 5432
+  database: authdb
+  user: dev_user
+  password: dev_pass
+
+# Realm import
+realm:
+  enabled: true
+  file: realms/realm.json
