@@ -1,0 +1,347 @@
+openapi: 3.1.0
+info:
+  title: Redacta Document Anonymization API
+  description: |
+    API for document anonymization and summarization service.
+    
+    ## Services
+    - **Document Service**: Document upload and management
+    - **Authentication Service**: User authentication and authorization  
+    - **Anonymization Service**: Document anonymization processing
+    - **GenAI Service**: AI-powered anonymization and summarization
+    
+  version: 1.0.0
+  contact:
+    name: Team OopsOps
+    email: team-oopsops@example.com
+
+servers:
+  - url: http://localhost:8081/api/v1
+    description: Development environment
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Common schemas
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: object
+            - type: array
+            - type: "null"
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - success
+        - message
+        - timestamp
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    # Document schemas
+    DocumentDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        fileUrl:
+          type: string
+        status:
+          type: string
+          enum: [UPLOADED, PROCESSING, ANONYMIZED, FAILED]
+        uploadDate:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - fileName
+        - status
+        - uploadDate
+
+    # Authentication schemas
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    RegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required:
+        - username
+        - email
+        - password
+
+    # GenAI schemas
+    AnonymizeRequest:
+      type: object
+      properties:
+        text:
+          type: string
+        level:
+          type: string
+          enum: [light, medium, heavy]
+          default: medium
+      required:
+        - text
+
+    SummarizeRequest:
+      type: object
+      properties:
+        text:
+          type: string
+        maxLength:
+          type: integer
+          minimum: 50
+          maximum: 1000
+          default: 200
+      required:
+        - text
+
+    GenAiResponse:
+      type: object
+      properties:
+        result:
+          type: string
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+      required:
+        - result
+
+paths:
+  # Document Service endpoints
+  /documents:
+    get:
+      tags:
+        - Documents
+      summary: Get all documents
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DocumentDto'
+
+  /documents/upload:
+    post:
+      tags:
+        - Documents
+      summary: Upload document
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DocumentDto'
+
+  # Authentication Service endpoints
+  /authentication/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /authentication/register:
+    post:
+      tags:
+        - Authentication
+      summary: User registration
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  # Anonymization Service endpoints
+  /anonymization/process:
+    post:
+      tags:
+        - Anonymization
+      summary: Anonymize document
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnonymizeRequest'
+      responses:
+        '200':
+          description: Document anonymized successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GenAiResponse'
+
+  # GenAI Service endpoints
+  /genai/anonymize:
+    post:
+      tags:
+        - GenAI
+      summary: AI-powered anonymization
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnonymizeRequest'
+      responses:
+        '200':
+          description: Text anonymized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenAiResponse'
+
+  /genai/summarize:
+    post:
+      tags:
+        - GenAI
+      summary: AI-powered summarization
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SummarizeRequest'
+      responses:
+        '200':
+          description: Text summarized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenAiResponse'
+
+  /genai/health:
+    get:
+      tags:
+        - GenAI
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+
+security:
+  - BearerAuth: []

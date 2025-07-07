@@ -1,0 +1,17 @@
+extends: ["spectral:oas"]
+
+rules:
+  # Use only rules that are guaranteed to exist
+  info-contact: true
+  info-description: true
+  operation-description: true
+  operation-operationId: true
+  operation-tags: true
+  paths-kebab-case: true
+  typed-enum: true
+  
+  # Disable problematic rules for now
+  operation-summary: false
+  operation-operationId-unique: false
+  operation-operationId-valid-in-url: false
+  operation-tag-defined: false

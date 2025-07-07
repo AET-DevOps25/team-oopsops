@@ -378,3 +378,23 @@ sketch
 # gitignore template for Vue.js projects
 #
 # Recommended template: Node.gitignore
+
+
+### Stub generation + Pre commit hook ###
+# Generated code
+server/*/generated/
+server/*/generated-client/
+genai-service/generated/
+client/src/generated/
+docs/api.html
+
+
+# OpenAPI Generator artifacts
+.openapi-generator/
+.openapi-generator-ignore
+
+# API development tools
+.spectral-cache/
+
+# Pre-commit
+.pre-commit-config.yaml.bak
