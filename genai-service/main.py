@@ -13,10 +13,14 @@ from conversation_chain import ConversationManager
 import os
 import tempfile
 import shutil
+import requests
+import os
 
 app = FastAPI(title="GenAI Service with RAG", version="1.0.0")
 
 llm = init_chat_model("openai:gpt-4-0125-preview")
+ANONYMIZATION_SERVICE_URL = os.getenv("ANONYMIZATION_SERVICE_URL")
+
 
 vector_store = VectorStoreManager(persist_directory="./chroma_db")
 conversation_manager = ConversationManager(vector_store)
@@ -34,7 +38,27 @@ def anonymize(request: AnonymizeRequest):
         "anonymized_text": None
     })
 
-    return GenAiResponse(reponseText=result["anonymized_text"])
+    changed_terms = result["changed_terms"]  # Expect this to be a list of {"original": ..., "anonymized": ...}
+    
+    anonymized_text = call_anonymization_service(
+        original_text=request.originalText,
+        changed_terms=changed_terms
+    )
+
+    return GenAiResponse(reponseText=anonymized_text)
+
+def call_anonymization_service(original_text: str, changed_terms: list[dict]) -> str:
+    payload = {
+        "originalText": original_text,
+        "changedTerms": changed_terms
+    }
+
+    try:
+        response = requests.post(f"{ANONYMIZATION_SERVICE_URL}/replace", json=payload)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        raise RuntimeError(f"Failed to call anonymization service: {e}")
 
 @app.post("/summarize", response_model=GenAiResponse)
 def summarize(request: SummarizeRequest):

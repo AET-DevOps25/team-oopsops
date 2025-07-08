@@ -6,4 +6,3 @@ export interface Document {
     fileName: string,
     status: string
 }
-
