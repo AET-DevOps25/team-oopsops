@@ -2,9 +2,7 @@ package oopsops.app.anonymization.controller;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.RestController;
 
-import oopsops.app.anonymization.entity.AnonymizationEntity;
 import oopsops.app.anonymization.dto.AnonymizationDto;
 import oopsops.app.anonymization.models.AnonymizationRequestBody;
 import oopsops.app.anonymization.models.ChangedTerm;

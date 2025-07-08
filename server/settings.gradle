@@ -1,7 +1,14 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'app'
 
 include ':common'
 include ':document-service'
 include ':authentication-service'
-include 'anonymization-service'
+include ':anonymization-service'
 
