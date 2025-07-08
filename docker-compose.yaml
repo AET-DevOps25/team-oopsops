@@ -147,3 +147,4 @@ services:
 volumes:
   postgres-data:
   pgadmin-data:
+  genai-chroma-data:

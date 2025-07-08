@@ -37,12 +37,31 @@
    cp .env.example .env
    ```
 
-5.⁠ Build with Docker: First open docker on your machine and then run the following command in the terminal:
+5.⁠ ⁠Set your OpenAI API key in the .env file:
+
+   ```bash
+   # Edit .env file and add your OpenAI API key
+   OPENAI_API_KEY=your_actual_openai_api_key_here
+   ```
+
+6.⁠ ⁠Run the service locally:
+
+   ```bash
+   # Run with uvicorn directly
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   
+   # Or use python -m uvicorn
+   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+7.⁠ ⁠Open your browser and go to http://localhost:8000/docs to see the API documentation.
+
+## Alternative: Docker Setup
+
+If you prefer to use Docker:
 
 ```bash
 docker compose up -d --build
 ```
-
-6.⁠ ⁠Open your browser and go to http://localhost:8000/docs to see the API documentation.
 
 ---
