@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Literal, List, Optional
+from typing import Literal, List, Optional, Dict, Any
 
 
 class AnonymizeRequest(BaseModel):
@@ -25,4 +25,35 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    status: str = "success"
+
+
+class DocumentUploadResponse(BaseModel):
+    document_id: str
+    filename: str
+    chunks_created: int
+    status: str = "success"
+
+
+class MarkdownUploadRequest(BaseModel):
+    filename: str
+    content: str
+
+
+class ConversationRequest(BaseModel):
+    conversation_id: str
+    query: str
+    document_ids: Optional[List[str]] = None
+
+
+class ConversationResponse(BaseModel):
+    response: str
+    sources: List[Dict[str, Any]]
+    conversation_id: str
+    status: str = "success"
+
+
+class DocumentListResponse(BaseModel):
+    documents: List[Dict[str, Any]]
+    total: int
     status: str = "success"
