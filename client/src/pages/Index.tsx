@@ -57,42 +57,36 @@ const Index = () => {
     }
   };
 
-  // TODO: Uncomment this section when the uploadDocument function is implemented
-  // TODO: Clicking the upload button should also navigate to the editor page
-  // const handleUpload = async () => {
-  //   if (!selectedFile) return;
+  
+  const handleUpload = async () => {
+    console.log('API:', import.meta.env.VITE_API_URL);
+    if (!selectedFile) return;
 
-  //   setIsUploading(true);
+    setIsUploading(true);
 
-  //   try {
-  //     const response = await uploadDocument(selectedFile)
+    try {
+      const response = await uploadDocument(selectedFile)
+      console.log("Upload response:", response);
 
-  //     if (response.status == "PROCESSED") {
-  //       toast.success("File uploaded successfully!");
-          //setUploadedDoc(response);
-        //setOriginalText(response.documentText || "");
-  //       setSelectedFile(null);
-  //       if (fileInputRef.current) {
-  //         fileInputRef.current.value = "";
-  //       }
-  //     } else {
-  //       toast.error("Upload failed. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Upload error:", error);
-  //     toast.error("Upload failed. Please try again.");
-  //   } finally {
-  //     setIsUploading(false);
-  //   }
-  // };
-
-  // TODO: For now, we will just navigate to the editor page, but later we remove this for the function above
-  const handleUpload = () => {
-    const documentInfo = JSON.parse(
-      sessionStorage.getItem('currentDocument') || '{}'
-    );
-    navigate(`/editor`);
+      if (response.status == "PROCESSED") {
+        toast.success("File uploaded successfully!");
+        sessionStorage.setItem("currentDocument", JSON.stringify(response));
+        navigate(`/editor`);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } else {
+        toast.error("Upload failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
+  
 
   const removeFile = () => {
     setSelectedFile(null);

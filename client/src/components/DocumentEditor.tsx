@@ -48,6 +48,18 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     if (documentInfo) {
       const parsedInfo = JSON.parse(documentInfo);
       console.log('Current document info:', parsedInfo);
+      const realContent: DocumentContent = {
+      title: parsedInfo.title || "Untitled",
+      content: [
+        {
+          paragraph: parsedInfo.documentText || "",
+          sensitive: []
+        }
+      ],
+      summary: ""
+    };
+
+    setDocumentData(realContent);
     }
   }, [documentId]);
 
