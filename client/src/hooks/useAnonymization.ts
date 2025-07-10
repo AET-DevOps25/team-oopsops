@@ -1,31 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { DocumentContent } from "@/data/mockDocument";
+import { DocumentContent } from "@/types/documentContent";
+import { anonymizeDocument } from '@/services/genaiService';
+
+
+const levelMap = {
+    1: "light",
+    2: "medium",
+    3: "heavy",
+  } as const;
 
 export const useAnonymization = (
   documentData: DocumentContent,
-  setDocumentData: (data: DocumentContent) => void
+  setDocumentData: (data: DocumentContent) => void,
+  isAnonymized: boolean,
+  setIsAnonymized: (value: boolean) => void
 ) => {
   const [anonymizationLevel, setAnonymizationLevel] = useState(2);
-  const [isAnonymized, setIsAnonymized] = useState(false);
   const [hasManualEdits, setHasManualEdits] = useState(false);
 
   const handleAnonymizationLevelChange = (value: number[]) => {
     setAnonymizationLevel(value[0]);
   };
 
-  const handleAnonymize = () => {
-    toast.info("Processing document", {
-      description: "Anonymizing document based on selected parameters...",
-    });
 
-    setTimeout(() => {
-      setIsAnonymized(true);
-      toast.success("Anonymization complete", {
-        description: "Your document has been anonymized successfully.",
+    const handleAnonymize = async () => {
+      toast.info("Processing document", {
+        description: "Anonymizing document based on selected parameters...",
       });
-    }, 2000);
-  };
+
+      try {
+        const fullText = documentData.content.map(p => p.paragraph).join("\n");
+
+        const response = await anonymizeDocument(fullText, levelMap[anonymizationLevel]);
+        const updatedContent = [
+          {
+            paragraph: response.responseText,
+            sensitive: (response.changedTerms || []).map((term, index) => ({
+              id: `term-${Date.now()}-${index}`,
+              text: term.original,
+              replacement: term.anonymized,
+            })),
+          }
+        ];
+        setDocumentData({
+          ...documentData,
+          content: updatedContent,
+        });
+
+        setIsAnonymized(true);
+        toast.success("Anonymization complete", {
+          description: "Your document has been anonymized successfully.",
+        });
+      } catch (err) {
+        toast.error("Anonymization failed", {
+          description: "Something went wrong while contacting the backend.",
+        });
+        console.error("Anonymization error:", err);
+      }
+    };
+
+
 
   const getLevelDescription = (level: number) => {
     switch (level) {

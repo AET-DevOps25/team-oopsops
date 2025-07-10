@@ -11,7 +11,7 @@ export async function anonymizeDocument(originalText: string, level: string){
     originalText,
     level,
   });
-  return response.data.anonymizedText;
+  return response.data;
 }
 
 export async function summarize(originalText: string, level: string) {

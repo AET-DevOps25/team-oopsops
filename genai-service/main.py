@@ -38,14 +38,15 @@ def anonymize(request: AnonymizeRequest):
         "anonymized_text": None
     })
 
-    changed_terms = result["changed_terms"]  # Expect this to be a list of {"original": ..., "anonymized": ...}
+    changed_terms = result["changed_terms"]  
     
     anonymized_text = call_anonymization_service(
         original_text=request.originalText,
         changed_terms=changed_terms
     )
 
-    return GenAiResponse(reponseText=anonymized_text)
+    return GenAiResponse(responseText=anonymized_text,
+                         changedTerms=changed_terms)
 
 def call_anonymization_service(original_text: str, changed_terms: list[dict]) -> str:
     payload = {

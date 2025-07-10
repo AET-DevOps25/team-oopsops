@@ -32,6 +32,7 @@ const AnonymizationPanel = ({
   getLevelDescription,
 }: AnonymizationPanelProps) => {
   const shouldShowAnonymized = isAnonymized || hasManualEdits;
+  console.log("shouldShowAnonymized:", shouldShowAnonymized);
 
   return (
     <div className="space-y-6">

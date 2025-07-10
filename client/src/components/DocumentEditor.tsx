@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockDocument, DocumentContent } from '@/data/mockDocument';
 import { useAnonymization } from '@/hooks/useAnonymization';
 import { useSummarization } from '@/hooks/useSummarization';
 import AnonymizationPanel from './AnonymizationPanel';
 import SummarizationPanel from './SummarizationPanel';
 import EditAnonymizedDialog from './EditAnonymizedDialog';
+import { DocumentContent } from '@/types/documentContent';
 
 type DocumentEditorProps = {
   documentId?: string | null;
 };
 
 const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
+  
   const [activeTab, setActiveTab] = useState('anonymize');
-  const [documentData, setDocumentData] = useState<DocumentContent>({
-    ...mockDocument,
-  });
+  const [documentData, setDocumentData] = useState<DocumentContent>();
   const [selectedText, setSelectedText] = useState<string>('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [currentEditItem, setCurrentEditItem] = useState<{
@@ -24,22 +23,25 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     replacement: string;
   } | null>(null);
   const [tempReplacement, setTempReplacement] = useState('');
+  const [isAnonymized, setIsAnonymized] = useState(false);
+
 
   // Custom hooks
   const {
     anonymizationLevel,
-    isAnonymized,
     hasManualEdits,
     handleAnonymizationLevelChange,
     handleAnonymize,
     getLevelDescription,
     handleSaveEdit,
     handleDownload,
-  } = useAnonymization(documentData, setDocumentData);
+  } = useAnonymization(documentData, setDocumentData,isAnonymized, setIsAnonymized);
 
   const { isSummarizing, summary, handleGenerateSummary } = useSummarization(
-    documentData.summary
+    documentData?.summary ?? ''
   );
+
+  
 
   useEffect(() => {
     console.log('Fetching document with ID:', documentId);
@@ -49,7 +51,7 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
       const parsedInfo = JSON.parse(documentInfo);
       console.log('Current document info:', parsedInfo);
       const realContent: DocumentContent = {
-      title: parsedInfo.title || "Untitled",
+      title: (parsedInfo.fileName?.replace(/\.pdf$/i, "") || "Untitled"),
       content: [
         {
           paragraph: parsedInfo.documentText || "",
@@ -62,6 +64,10 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     setDocumentData(realContent);
     }
   }, [documentId]);
+
+  if (!documentData) {
+    return <div className="p-4 text-muted-foreground">Loading document...</div>;
+  }
 
   const handleTextSelection = () => {
     const selection = window.getSelection();
