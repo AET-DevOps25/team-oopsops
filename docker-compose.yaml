@@ -142,8 +142,6 @@ services:
       - "8085:8080"
     restart: unless-stopped
 
-
-
 volumes:
   postgres-data:
   pgadmin-data:

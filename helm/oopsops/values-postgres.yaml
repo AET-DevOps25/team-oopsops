@@ -1,0 +1,15 @@
+postgresql:
+  auth:
+    username: dev_user
+    password: dev_pass
+    database: documentdb
+
+  postgresqlDatabases:
+    - documentdb
+    - authdb
+    - anonymizationdb
+
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi

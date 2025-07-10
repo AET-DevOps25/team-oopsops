@@ -1,12 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "postgresql.fullname" . }}
+  name: {{ include "document-service.fullname" . }}
+  labels:
+{{ include "document-service.labels" . | indent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.targetPort }}
   selector:
-    app.kubernetes.io/name: {{ include "postgresql.name" . }}
+    app.kubernetes.io/name: {{ include "document-service.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: keycloak
-description: "Keycloak identity provider for OopsOps"
-type: application
-version: 0.1.0
-appVersion: "22.0.3"

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client
+  name: {{ include "anonymization-service.fullname" . }}
   labels:
-    {{- include "client.labels" . | nindent 4 }}
+    {{- include "anonymization-service.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: client
+      app.kubernetes.io/name: anonymization-service
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: client
+        app.kubernetes.io/name: anonymization-service
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       containers:
-        - name: client
+        - name: anonymization-service
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:

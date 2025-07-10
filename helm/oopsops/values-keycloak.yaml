@@ -1,0 +1,43 @@
+keycloak:
+  postgresql:
+    enabled: false
+
+  ha:
+    enabled: false
+
+  externalDatabase:
+    enabled: true
+    vendor: POSTGRES
+    host:   oopsops-postgresql
+    port:   5432
+    database: authdb
+    username: dev_user
+    password: dev_pass
+
+  extraEnv: |-
+    - name: KEYCLOAK_IMPORT
+      value: /opt/keycloak/data/import/realm-config
+
+  # ──────────────────────────────────────────────────────────────
+  # These two must be *strings*, not arrays, per the chart schema:
+  extraVolumes: |-
+    - name: realm
+      configMap:
+        name: realm-config
+
+  extraVolumeMounts: |-
+    - name: realm
+      mountPath: /opt/keycloak/data/import
+      readOnly: true
+  # ──────────────────────────────────────────────────────────────
+
+  ingress:
+    enabled: true
+
+  resources:
+    requests:
+      cpu: 300m
+      memory: 512Mi
+    limits:
+      cpu: 600m
+      memory: 1Gi

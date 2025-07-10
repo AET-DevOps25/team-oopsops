@@ -7,29 +7,8 @@ appVersion: "1.0.0"
 
 dependencies:
   - name: postgresql
-    alias: postgresql
-    version: 0.1.0
-    repository: "file://charts/postgresql"
+    version: 12.8.5
+    repository: https://charts.bitnami.com/bitnami
   - name: keycloak
-    alias: keycloak
-    version: 0.1.0
-    repository: "file://charts/keycloak"
-  - name: document-service
-    alias: documentService
-    version: 0.1.0
-    repository: "file://charts/document-service"
-  - name: authentication-service
-    alias: authenticationService
-    version: 0.1.0
-    repository: "file://charts/authentication-service"
-  - name: client
-    alias: client
-    version: 0.1.0
-    repository: "file://charts/client"
-
-  # - name: anonymization-service
-  #   version: 0.1.0
-  #   repository: "file://charts/anonymization-service"
-  # - name: genai-service
-  #   version: 0.1.0
-  #   repository: "file://charts/genai-service"
+    version: 18.0.0
+    repository: https://codecentric.github.io/helm-charts
