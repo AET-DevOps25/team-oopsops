@@ -28,6 +28,18 @@ spec:
               service:
                 name: authentication-service
                 port: { number: {{ .Values.authenticationService.service.port }} }
+          - path: /api/v1/anonymization
+            pathType: Prefix
+            backend:
+              service:
+                name: anonymization-service
+                port: { number: {{ .Values.anonymizationService.service.port }} }
+          - path: /api/v1/genai
+            pathType: Prefix
+            backend:
+              service:
+                name: genai-service
+                port: { number: {{ .Values.genaiService.service.port }} }
           - path: /
             pathType: Prefix
             backend:

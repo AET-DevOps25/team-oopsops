@@ -13,3 +13,10 @@ postgresql:
     persistence:
       enabled: true
       size: 10Gi
+
+    initdbScripts:
+      create-multiple-dbs.sql: |-
+        -- this file runs inside /docker-entrypoint-initdb.d
+        CREATE DATABASE documentdb;
+        CREATE DATABASE authdb;
+        CREATE DATABASE anonymizationdb;

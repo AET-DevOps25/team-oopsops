@@ -7,4 +7,9 @@ service:
   type: ClusterIP
   port: 8000
   targetPort: 8000
-env: []
+env:
+  - name: OPENAI_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: openai-secret
+        key: OPENAI_API_KEY

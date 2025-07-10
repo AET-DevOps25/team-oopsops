@@ -7,4 +7,12 @@ service:
   type: ClusterIP
   port: 8092
   targetPort: 8092
-env: []
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: dev
+  - name: SPRING_DATASOURCE_URL
+    value: jdbc:postgresql://oopsops-app-postgresql:5432/authdb
+  - name: SPRING_DATASOURCE_USERNAME
+    value: dev_user
+  - name: SPRING_DATASOURCE_PASSWORD
+    value: dev_pass
