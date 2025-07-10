@@ -5,10 +5,10 @@ import { anonymizeDocument } from '@/services/genaiService';
 
 
 const levelMap = {
-    1: "light",
-    2: "medium",
-    3: "heavy",
-  } as const;
+  1: "light",
+  2: "medium",
+  3: "high",
+} as const;
 
 export const useAnonymization = (
   documentData: DocumentContent,
@@ -24,41 +24,37 @@ export const useAnonymization = (
   };
 
 
-    const handleAnonymize = async () => {
-      toast.info("Processing document", {
-        description: "Anonymizing document based on selected parameters...",
+  const handleAnonymize = async () => {
+    toast.info("Processing document", {
+      description: "Anonymizing document based on selected parameters...",
+    });
+
+    try {
+      const fullText = documentData.paragraph;
+
+      const response = await anonymizeDocument(fullText, levelMap[anonymizationLevel]);
+      console.log("Anonymization response:", response.responseText, response.changedTerms);
+      setDocumentData({
+        ...documentData,
+        paragraph: response.responseText,
+        sensitive: (response.changedTerms || []).map((term, index) => ({
+          id: `term-${Date.now()}-${index}`,
+          text: term.original,
+          replacement: term.anonymized,
+        })),
       });
 
-      try {
-        const fullText = documentData.content.map(p => p.paragraph).join("\n");
-
-        const response = await anonymizeDocument(fullText, levelMap[anonymizationLevel]);
-        const updatedContent = [
-          {
-            paragraph: response.responseText,
-            sensitive: (response.changedTerms || []).map((term, index) => ({
-              id: `term-${Date.now()}-${index}`,
-              text: term.original,
-              replacement: term.anonymized,
-            })),
-          }
-        ];
-        setDocumentData({
-          ...documentData,
-          content: updatedContent,
-        });
-
-        setIsAnonymized(true);
-        toast.success("Anonymization complete", {
-          description: "Your document has been anonymized successfully.",
-        });
-      } catch (err) {
-        toast.error("Anonymization failed", {
-          description: "Something went wrong while contacting the backend.",
-        });
-        console.error("Anonymization error:", err);
-      }
-    };
+      setIsAnonymized(true);
+      toast.success("Anonymization complete", {
+        description: "Your document has been anonymized successfully.",
+      });
+    } catch (err) {
+      toast.error("Anonymization failed", {
+        description: "Something went wrong while contacting the backend.",
+      });
+      console.error("Anonymization error:", err);
+    }
+  };
 
 
 
@@ -86,30 +82,30 @@ export const useAnonymization = (
     // Check if this is a new item or editing existing
     if (currentEditItem.id.startsWith("new-")) {
       // Find the paragraph containing the text and add new sensitive item
-      for (let i = 0; i < newDocumentData.content.length; i++) {
-        if (
-          newDocumentData.content[i].paragraph.includes(currentEditItem.text)
-        ) {
-          newDocumentData.content[i].sensitive.push({
-            id: currentEditItem.id,
-            text: currentEditItem.text,
-            replacement: tempReplacement,
-          });
-          break;
-        }
-      }
+      newDocumentData.sensitive.push({
+        id: currentEditItem.id,
+        text: currentEditItem.text,
+        replacement: tempReplacement,
+      });
+      console.log("currentEditItem Text",currentEditItem.text);
+      newDocumentData.paragraph = newDocumentData.paragraph.replace(
+        currentEditItem.text,
+        tempReplacement
+      );
     } else {
       // Update existing item
-      for (let i = 0; i < newDocumentData.content.length; i++) {
-        const sensitiveIndex = newDocumentData.content[i].sensitive.findIndex(
-          (s) => s.id === currentEditItem.id
-        );
+      const sensitiveIndex = newDocumentData.sensitive.findIndex(
+        (s) => s.id === currentEditItem.id
+      );
 
-        if (sensitiveIndex >= 0) {
-          newDocumentData.content[i].sensitive[sensitiveIndex].replacement =
-            tempReplacement;
-          break;
-        }
+      if (sensitiveIndex >= 0) {
+        const oldReplacement = newDocumentData.sensitive[sensitiveIndex].replacement;
+        newDocumentData.sensitive[sensitiveIndex].replacement =
+          tempReplacement;
+        newDocumentData.paragraph = newDocumentData.paragraph.replace(
+          oldReplacement,
+          tempReplacement
+        );
       }
     }
 

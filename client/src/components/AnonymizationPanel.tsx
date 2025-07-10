@@ -4,7 +4,7 @@ import { Slider } from '@/components/ui/slider';
 import { Download } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import DocumentParagraph from './DocumentParagraph';
-import { DocumentContent } from '@/data/mockDocument';
+import { DocumentContent } from '@/types/documentContent';
 
 type AnonymizationPanelProps = {
   anonymizationLevel: number;
@@ -32,7 +32,6 @@ const AnonymizationPanel = ({
   getLevelDescription,
 }: AnonymizationPanelProps) => {
   const shouldShowAnonymized = isAnonymized || hasManualEdits;
-  console.log("shouldShowAnonymized:", shouldShowAnonymized);
 
   return (
     <div className="space-y-6">
@@ -96,15 +95,12 @@ const AnonymizationPanel = ({
           <div className="bg-white dark:bg-gray-900 border border-border rounded-lg p-6">
             <h1 className="text-2xl font-bold mb-4">{documentData.title}</h1>
             <div className="prose max-w-none">
-              {documentData.content.map((para, index) => (
-                <DocumentParagraph
-                  key={index}
-                  paragraph={para}
-                  shouldShowAnonymized={shouldShowAnonymized}
-                  onTextSelection={onTextSelection}
-                  onEditItem={onEditItem}
-                />
-              ))}
+              <DocumentParagraph
+                paragraph={{ paragraph: documentData.paragraph, sensitive: documentData.sensitive }}
+                shouldShowAnonymized={shouldShowAnonymized}
+                onTextSelection={onTextSelection}
+                onEditItem={onEditItem}
+              />
             </div>
           </div>
         </ScrollArea>

@@ -6,9 +6,7 @@ export type SensitiveItem = {
 
 export type DocumentContent = {
   title: string;
-  content: {
-    paragraph: string;
-    sensitive: SensitiveItem[];
-  }[];
+  paragraph: string;               
+  sensitive: SensitiveItem[];     
   summary: string;
 };

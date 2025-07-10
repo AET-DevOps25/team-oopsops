@@ -49,15 +49,10 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     const documentInfo = sessionStorage.getItem('currentDocument');
     if (documentInfo) {
       const parsedInfo = JSON.parse(documentInfo);
-      console.log('Current document info:', parsedInfo);
       const realContent: DocumentContent = {
       title: (parsedInfo.fileName?.replace(/\.pdf$/i, "") || "Untitled"),
-      content: [
-        {
-          paragraph: parsedInfo.documentText || "",
-          sensitive: []
-        }
-      ],
+      paragraph: parsedInfo.documentText || "",
+      sensitive: [],
       summary: ""
     };
 
