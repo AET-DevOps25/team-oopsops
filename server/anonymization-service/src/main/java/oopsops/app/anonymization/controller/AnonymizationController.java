@@ -4,10 +4,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.text.Normalizer;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,52 +53,24 @@ public class AnonymizationController {
         return ResponseEntity.ok(savedDto);
     }
 
-    private String normalize(String input) {
-    if (input == null) return "";
-    String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
-    return normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "").toLowerCase().trim();
-}
-
-    private String flexibleReplace(String text, String original, String replacement) {
-    Pattern flexiblePattern = Pattern.compile(
-        Pattern.quote(original), 
-        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-    Matcher matcher = flexiblePattern.matcher(text);
-    return matcher.replaceAll(replacement);
-}
-
     @PostMapping("/replace")
     public ResponseEntity<String> anonymizeText(@RequestBody ReplacementRequest request) {
         String anonymizedText = request.getOriginalText();
 
-    System.out.println("Original text:");
-    System.out.println(anonymizedText);
+        String newAnonymizedText = anonymizedText.replace("\n", " ").replace("\r", " ");
 
-    // Sort longest first to avoid partial replacements
-    List<ChangedTerm> sortedTerms = new ArrayList<>(request.getChangedTerms());
-    sortedTerms.sort((a, b) -> Integer.compare(b.getOriginal().length(), a.getOriginal().length()));
 
-    for (ChangedTerm term : sortedTerms) {
-        String original = term.getOriginal();
-        String replacement = term.getAnonymized();
+        newAnonymizedText = newAnonymizedText.replaceAll(" +", " ");
+        
 
-        System.out.println("Trying to replace (flexible match): '" + original + "'");
+        // Sort longest first to avoid partial replacements
+        List<ChangedTerm> sortedTerms = new ArrayList<>(request.getChangedTerms());
+        sortedTerms.sort((a, b) -> Integer.compare(b.getOriginal().length(), a.getOriginal().length()));
 
-        // Build regex pattern to match normalized, case-insensitive version
-        String normalizedOriginal = normalize(original);
-        Pattern pattern = Pattern.compile("\\b" + Pattern.quote(normalizedOriginal) + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-        Matcher matcher = pattern.matcher(normalize(anonymizedText));
-        if (matcher.find()) {
-            // Replace the actual (non-normalized) original string in the real text
-            anonymizedText = flexibleReplace(anonymizedText, original, replacement);
-            System.out.println("Replaced successfully");
-        } else {
-            System.out.println("NOT FOUND in text: '" + original + "'");
+        for (ChangedTerm term : sortedTerms) {
+            newAnonymizedText = newAnonymizedText.replace(term.getOriginal(), term.getAnonymized());
         }
-    }
 
-        return ResponseEntity.ok(anonymizedText);
+        return ResponseEntity.ok(newAnonymizedText);
     }
 }
