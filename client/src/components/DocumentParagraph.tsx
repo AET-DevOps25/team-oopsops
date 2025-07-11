@@ -38,7 +38,7 @@ const DocumentParagraph = ({
   // Sort by position in text to process in order
   const sortedSensitive = [...paragraph.sensitive].sort(
     (a, b) =>
-      paragraph.paragraph.indexOf(a.text) - paragraph.paragraph.indexOf(b.text)
+      paragraph.paragraph.indexOf(a.replacement) - paragraph.paragraph.indexOf(b.replacement)
   );
 
   for (const item of sortedSensitive) {
