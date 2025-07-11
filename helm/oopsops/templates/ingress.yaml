@@ -8,44 +8,42 @@ metadata:
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
-  {{- if .Values.ingress.tls }}
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}
+        - {{ include "oopsops-app.ingressHost" . }}
       secretName: {{ .Values.ingress.secretName }}
-  {{- end }}
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ include "oopsops-app.ingressHost" . }}
       http:
         paths:
-          # ── API endpoints ─────────────────────────────────────────────
           - path: /api/v1/documents
             pathType: Prefix
             backend:
               service:
                 name: document-service
-                port:
-                  number: {{ .Values.documentService.service.port }}
+                port: { number: {{ .Values.documentService.service.port }} }
           - path: /api/v1/authentication
             pathType: Prefix
             backend:
               service:
                 name: authentication-service
-                port:
-                  number: {{ .Values.authenticationService.service.port }}
+                port: { number: {{ .Values.authenticationService.service.port }} }
+          - path: /api/v1/anonymization
+            pathType: Prefix
+            backend:
+              service:
+                name: anonymization-service
+                port: { number: {{ .Values.anonymizationService.service.port }} }
           - path: /api/v1/genai
             pathType: Prefix
             backend:
               service:
                 name: genai-service
-                port:
-                  number: {{ .Values.genaiService.service.port }}
-          # ── SPA catch-all ────────────────────────────────────────────────
+                port: { number: {{ .Values.genaiService.service.port }} }
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client-service
-                port:
-                  number: {{ .Values.client.service.port }}
+                name: client
+                port: { number: {{ .Values.client.service.port }} }
 {{- end }}

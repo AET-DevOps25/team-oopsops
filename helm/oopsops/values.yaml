@@ -1,75 +1,106 @@
 openai:
   secretName: openai-secret
 
-documentService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/server/document-service
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
-    port: 8091
-    targetPort: 8091
-  replicaCount: 1
-  env:
-    - name: SPRING_DATASOURCE_URL
-      value: jdbc:postgresql://postgres:5432/documentdb
-    - name: SPRING_DATASOURCE_USERNAME
-      value: dev_user
-    - name: SPRING_DATASOURCE_PASSWORD
-      value: dev_pass
+ingress:
+  enabled: true
+  className: nginx
+  host: redactiq.student.k8s.aet.cit.tum.de
+  secretName: devops25-tls
+  annotations: {}
 
 postgresql:
-  enabled: true
   auth:
     username: dev_user
     password: dev_pass
-    database: documentdb  
-  initdbScripts:
-    create-multiple-dbs.sh: |
-      #!/bin/bash
-      set -e
-      echo "Creating multiple databases..."
-      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-          CREATE DATABASE documentdb;
-          CREATE DATABASE anonymizationdb;
-      EOSQL
-      echo "Databases created!"
+    database: documentdb
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
 
+keycloak:
+  postgresql:
+    enabled: false
+
+  externalDatabase:
+    enabled: true
+    vendor: POSTGRES
+    host: oopsops-postgresql
+    port: 5432
+    database: authdb
+    username: dev_user
+    password: dev_pass
+
+  extraEnv: |-
+    - name: KEYCLOAK_IMPORT
+      value: /opt/keycloak/data/import/realm-config
+
+  realmConfigMapName: realm-config
+
+  ingress:
+    enabled: true
+
+  resources:
+    requests:
+      cpu: 300m
+      memory: 512Mi
+    limits:
+      cpu: 600m
+      memory: 1Gi
+
+documentService:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/server/document-service
+    tag:      latest
+    pullPolicy: Always
+  service:
+    type:       ClusterIP
+    port:       8091
+    targetPort: 8091
+  env: []
 
 authenticationService:
+  replicaCount: 1
   image:
     repository: ghcr.io/aet-devops25/team-oopsops/server/authentication-service
     tag: latest
-    pullPolicy: Always
   service:
     type: ClusterIP
     port: 8092
     targetPort: 8092
-  replicaCount: 1
-  env:
-    - name: SPRING_PROFILES_ACTIVE
-      value: dev
+  env: []
 
 anonymizationService:
+  replicaCount: 1
   image:
     repository: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service
     tag: latest
-    pullPolicy: Always
   service:
     type: ClusterIP
     port: 8094
     targetPort: 8094
+  env: []
+
+genaiService:
   replicaCount: 1
-  env:
-    - name: SPRING_DATASOURCE_URL
-      value: jdbc:postgresql://postgres:5432/anonymizationdb
-    - name: SPRING_DATASOURCE_USERNAME
-      value: dev_user
-    - name: SPRING_DATASOURCE_PASSWORD
-      value: dev_pass
+  image:
+    repository: ghcr.io/aet-devops25/team-oopsops/genai-service
+    tag: latest
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
 
 client:
+  replicaCount: 1
   image:
     repository: ghcr.io/aet-devops25/team-oopsops/client
     tag: latest
@@ -78,34 +109,3 @@ client:
     type: ClusterIP
     port: 3000
     targetPort: 80
-  replicaCount: 1
-
-genaiService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/genai-service
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
-    port: 8000
-    targetPort: 8000
-  env:
-    - name: ANONYMIZATION_SERVICE_URL
-      value: http://anonymization-service:8094/api/v1/anonymization
-  replicaCount: 1
-
-ingress:
-  enabled: true
-  className: "nginx"
-  tls: true
-  host: ""
-  secretName: "devops25-tls"
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
-    nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS, PUT, DELETE"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization,Content-Type"
-    nginx.ingress.kubernetes.io/cors-max-age: "1728000"

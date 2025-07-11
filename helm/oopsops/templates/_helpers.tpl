@@ -7,3 +7,11 @@
   test.redactiq.student.k8s.aet.cit.tum.de
 {{- end -}}
 {{- end }}
+
+{{- define "oopsops-app.fullname" -}}
+{{ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "oopsops-app.ingressHost" -}}
+{{- .Values.ingress.host }}
+{{- end }}
