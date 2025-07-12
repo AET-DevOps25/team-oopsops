@@ -5,13 +5,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.List;
 
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import oopsops.app.document.dto.DocumentDto;
@@ -30,24 +32,44 @@ public class DocumentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DocumentDto>> getAllDocuments() {
-        List<Document> documents = documentService.getAllDocuments();
+    public ResponseEntity<List<DocumentDto>> getAllDocuments(@AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        List<Document> documents = documentService.getAllByUser(userId);
         List<DocumentDto> dtos = documents.stream()
-            .map(document -> new DocumentDto(
+                .map(document -> new DocumentDto(
+                        document.getId(),
+                        document.getUserId(),
+                        document.getFileName(),
+                        document.getFileUrl(),
+                        document.getStatus(),
+                        document.getUploadDate(),
+                        document.getDocumentText().getText()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<DocumentDto> getDocumentById(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID docId) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        Document document = documentService.getByUserAndId(userId, docId)
+                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+
+        DocumentDto dto = new DocumentDto(
                 document.getId(),
                 document.getUserId(),
                 document.getFileName(),
                 document.getFileUrl(),
                 document.getStatus(),
                 document.getUploadDate(),
-                document.getDocumentText().getText()
-            ))
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+                document.getDocumentText().getText());
+
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<DocumentDto> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<DocumentDto> upload(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal Jwt jwt) {
 
         if (file == null || file.isEmpty()) {
             throw new InvalidFileTypeException("No file uploaded");
@@ -56,25 +78,21 @@ public class DocumentController {
             throw new InvalidFileTypeException("Only PDFs allowed");
         }
 
-        // Temporary user ID for testing purposes
-        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000000");
-
+        UUID userId = UUID.fromString(jwt.getSubject());
         Document document = documentService.uploadAndProcess(userId, file);
 
         var dto = new DocumentDto(
-            document.getId(),
-            document.getUserId(),
-            document.getFileName(),
-            document.getFileUrl(),
-            document.getStatus(),
-            document.getUploadDate(),
-            document.getDocumentText().getText()
-        );
+                document.getId(),
+                document.getUserId(),
+                document.getFileName(),
+                document.getFileUrl(),
+                document.getStatus(),
+                document.getUploadDate(),
+                document.getDocumentText().getText());
 
         return ResponseEntity
-            .created(URI.create("/api/v1/documents/" + document.getId()))
-            .body(dto);
+                .created(URI.create("/api/v1/documents/" + document.getId()))
+                .body(dto);
     }
-
 
 }
