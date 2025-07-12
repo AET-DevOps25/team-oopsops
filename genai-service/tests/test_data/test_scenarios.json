@@ -1,0 +1,49 @@
+{
+  "scenarios": [
+    {
+      "name": "high_sensitivity",
+      "description": "Document with multiple types of PII",
+      "expected_entities": [
+        "PERSON",
+        "SSN",
+        "EMAIL",
+        "PHONE",
+        "ADDRESS",
+        "CREDIT_CARD"
+      ],
+      "expected_level": "high",
+      "sample_text": "John Doe, SSN: 123-45-6789, Email: john@example.com, Phone: (555) 123-4567"
+    },
+    {
+      "name": "medium_sensitivity",
+      "description": "Document with some personal information",
+      "expected_entities": ["PERSON", "EMAIL"],
+      "expected_level": "medium",
+      "sample_text": "Contact Jane Smith at jane.smith@company.com for more information."
+    },
+    {
+      "name": "low_sensitivity",
+      "description": "Document with minimal personal information",
+      "expected_entities": ["PERSON"],
+      "expected_level": "light",
+      "sample_text": "The project manager John will handle this task."
+    }
+  ],
+  "edge_cases": [
+    {
+      "name": "empty_document",
+      "text": "",
+      "expected_behavior": "handle_gracefully"
+    },
+    {
+      "name": "very_long_document",
+      "text": "Lorem ipsum... (repeated 1000 times)",
+      "expected_behavior": "chunk_processing"
+    },
+    {
+      "name": "special_characters",
+      "text": "User: José María, Email: josé@español.com, Phone: +34-123-456-789",
+      "expected_behavior": "unicode_support"
+    }
+  ]
+}
