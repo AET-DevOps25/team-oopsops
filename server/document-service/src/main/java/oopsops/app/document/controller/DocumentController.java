@@ -39,7 +39,8 @@ public class DocumentController {
                 document.getFileName(),
                 document.getFileUrl(),
                 document.getStatus(),
-                document.getUploadDate()
+                document.getUploadDate(),
+                document.getDocumentText().getText()
             ))
             .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
@@ -66,7 +67,8 @@ public class DocumentController {
             document.getFileName(),
             document.getFileUrl(),
             document.getStatus(),
-            document.getUploadDate()
+            document.getUploadDate(),
+            document.getDocumentText().getText()
         );
 
         return ResponseEntity
