@@ -7,7 +7,7 @@ import java.util.UUID;
 public record AnonymizationRequestBody(
     String originalText,
     String anonymizedText,
-    UUID userId,
+    // UUID userId,
     String level,
     List<ChangedTerm> changedTerms) {
 
@@ -15,6 +15,6 @@ public record AnonymizationRequestBody(
         Objects.requireNonNull(originalText, "originalText must not be null");
         Objects.requireNonNull(anonymizedText, "anonymizedText must not be null");
         Objects.requireNonNull(level, "level must not be null");
-        Objects.requireNonNull(userId, "userId must not be null");
+        // Objects.requireNonNull(userId, "userId must not be null");
     }
 }
