@@ -11,7 +11,7 @@ const Navbar = () => {
         <Link to="/" className="font-bold text-xl">Redacta</Link>
 
         <nav className="flex items-center space-x-4">
-          <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
+          <Link to="/home" className="text-sm font-medium transition-colors hover:text-primary">
             Home
           </Link>
           <Link to="/archive" className="text-sm font-medium transition-colors hover:text-primary">

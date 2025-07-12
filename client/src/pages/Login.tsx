@@ -21,7 +21,7 @@ export default function LoginForm() {
     try {
       const token = await loginUser({ username, password });
       login(token);
-      navigate("/");
+      navigate("/home");
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
 
