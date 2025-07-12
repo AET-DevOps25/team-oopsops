@@ -1,0 +1,90 @@
+name: Deploy to AWS
+
+on:
+  # Allows to manually run this workflow from the Actions tab
+  # You can select which branch to run it on from the UI.
+  workflow_dispatch:
+  # Also triggers the workflow on pushes to branches matching 'feature/**'
+  # This is useful for automatically testing deployment changes on feature branches.
+  push:
+    branches:
+      - 'feature/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: oopoops
+      url: 'https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Debug Environment Variables
+        run: |
+          echo "EC2_PUBLIC_IP: ${{ vars.EC2_PUBLIC_IP }}"
+          echo "AWS_EC2_USER: ${{ vars.AWS_EC2_USER }}"
+          echo "SSH Key length: ${#AWS_EC2_PRIVATE_KEY}"
+        env:
+          AWS_EC2_PRIVATE_KEY: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+
+      - name: Copy Docker Compose File to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.EC2_PUBLIC_IP }}
+          username: ${{ vars.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          source: "./compose.aws.yml,./create-multiple-dbs.sh"
+          target: /home/${{ vars.AWS_EC2_USER }}
+
+      - name: Create .env file on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_PUBLIC_IP }}
+          username: ${{ vars.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          script: |
+            # Exit immediately if a command exits with a non-zero status.
+            set -e
+            echo "--- Creating .env file ---"
+            # Overwrite existing file to ensure it's clean on each deployment
+            > .env
+            echo "CLIENT_HOST=client.${{ vars.EC2_PUBLIC_IP }}.nip.io" >> .env
+            echo "API_HOST=api.${{ vars.EC2_PUBLIC_IP }}.nip.io" >> .env
+            echo "PUBLIC_API_URL=https://api.${{ vars.EC2_PUBLIC_IP }}.nip.io/docs" >> .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+            echo ".env file created successfully."
+
+      - name: Deploy with Docker Compose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_PUBLIC_IP }}
+          username: ${{ vars.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          script: |
+            # Exit on error, print commands
+            set -ex
+            
+            echo "--- Verifying Docker installation ---"
+            docker --version
+            docker compose version
+
+            echo "--- Logging into Docker registry (GHCR) ---"
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "--- Stopping any running services to avoid conflicts ---"
+            docker compose -f compose.aws.yml down || echo "No running containers to stop. Continuing."
+
+            echo "--- Starting Docker Compose services ---"
+            docker compose -f compose.aws.yml --env-file .env up --pull always -d
+
+            echo "--- Deployment initiated. Waiting 15 seconds for services to stabilize... ---"
+            sleep 15
+
+            echo "--- Checking status of running containers ---"
+            docker compose -f compose.aws.yml ps
+
+            echo "--- Displaying recent logs for troubleshooting ---"
+            docker compose -f compose.aws.yml logs --tail=50

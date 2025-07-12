@@ -9,12 +9,12 @@ env:
   REPO_OWNER: aet-devops25
   CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client
   DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service
-  ARCHIVE_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/archive-service
+  ANONYMIZATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service
   AUTHENTICATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service
   GENAI_IMAGE: ghcr.io/aet-devops25/team-oopsops/genai-service
   CLIENT_DIR: ./client
   DOCUMENT_DIR: ./server/document-service
-  ARCHIVE_DIR: ./server/archive-service
+  ANONYMIZATION_DIR: ./server/anonymization-service
   AUTHENTICATION_DIR: ./server/authentication-service
   GENAI_DIR: ./genai-service
 
@@ -51,6 +51,12 @@ jobs:
           docker build -t ${{ env.DOCUMENT_IMAGE }}:$TAG -t ${{ env.DOCUMENT_IMAGE }}:latest -f ${{ env.DOCUMENT_DIR }}/Dockerfile ./server
           docker push ${{ env.DOCUMENT_IMAGE }}:$TAG
           docker push ${{ env.DOCUMENT_IMAGE }}:latest
+      
+      - name: Build and Push Anonymization Service Image
+        run: |
+          docker build -t ${{ env.ANONYMIZATION_IMAGE }}:$TAG -t ${{ env.ANONYMIZATION_IMAGE }}:latest -f ${{ env.ANONYMIZATION_DIR }}/Dockerfile ./server
+          docker push ${{ env.ANONYMIZATION_IMAGE }}:$TAG
+          docker push ${{ env.ANONYMIZATION_IMAGE }}:latest
 
       - name: Build and Push Authentication Service Image
         run: |
