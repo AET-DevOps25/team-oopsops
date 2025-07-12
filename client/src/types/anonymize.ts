@@ -1,9 +1,13 @@
-import { UUID } from "crypto";
 
-export interface AnonymizedDocument {
-    id: UUID,
-    documentId: UUID
-    userId : UUID
-    fileName: string,
-    status: string
-}
+
+export type ChangedTerm = {
+  original: string;
+  anonymized: string;
+};
+
+export type AnonymizationRequestBody = {
+  originalText: string;
+  anonymizedText: string;
+  level: string;
+  changedTerms: ChangedTerm[];
+};

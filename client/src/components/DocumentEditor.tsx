@@ -24,6 +24,7 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
   } | null>(null);
   const [tempReplacement, setTempReplacement] = useState('');
   const [isAnonymized, setIsAnonymized] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
 
   // Custom hooks
@@ -35,7 +36,8 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     getLevelDescription,
     handleSaveEdit,
     handleDownload,
-  } = useAnonymization(documentData, setDocumentData,isAnonymized, setIsAnonymized);
+    handleSave,
+  } = useAnonymization(documentData, setDocumentData,isAnonymized, setIsAnonymized, isSaved, setIsSaved);
 
   const { isSummarizing, summary, handleGenerateSummary } = useSummarization(
     documentData?.summary ?? ''
@@ -127,6 +129,8 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
             onTextSelection={handleTextSelection}
             onEditItem={handleEditItem}
             getLevelDescription={getLevelDescription}
+            onSave={handleSave}
+            isSaved={isSaved}
           />
         </TabsContent>
 

@@ -24,7 +24,7 @@ public class AnonymizationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "UUID", updatable = false, nullable = false)
+    @Column(columnDefinition = "UUID", nullable = false)
     private UUID id;
 
     @Column(name = "created", nullable = false)

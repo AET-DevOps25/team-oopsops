@@ -17,7 +17,7 @@ public record AnonymizationDto(
     List<ChangedTerm> changedTerms) {
     public static AnonymizationDto fromDao(AnonymizationEntity entity) {
         return new AnonymizationDto(
-            entity.getDocumentId(),
+            entity.getId(),
             entity.getCreated(),
             entity.getDocumentId(),
             entity.getOriginalText(),
@@ -31,6 +31,10 @@ public record AnonymizationDto(
         AnonymizationEntity entity = new AnonymizationEntity();
         if (created != null) {
             entity.setCreated(created);
+        }
+        if (this.id != null) {
+            System.out.println("Setting ID: " + this.id);
+            entity.setId(this.id);
         }
         entity.setDocumentId(documentId);
         entity.setOriginalText(originalText);

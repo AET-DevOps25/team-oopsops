@@ -17,6 +17,8 @@ type AnonymizationPanelProps = {
   onTextSelection: () => void;
   onEditItem: (item: { id: string; text: string; replacement: string }) => void;
   getLevelDescription: (level: number) => string;
+  isSaved: boolean;
+  onSave: () => Promise<void>;
 };
 
 const AnonymizationPanel = ({
@@ -30,6 +32,8 @@ const AnonymizationPanel = ({
   onTextSelection,
   onEditItem,
   getLevelDescription,
+  isSaved,
+  onSave,
 }: AnonymizationPanelProps) => {
   const shouldShowAnonymized = isAnonymized || hasManualEdits;
 
@@ -79,7 +83,18 @@ const AnonymizationPanel = ({
       <div className="glass-panel p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Document Preview</h2>
-          {shouldShowAnonymized && (
+
+          {shouldShowAnonymized && !isSaved && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSave}
+            >
+              Save Anonymization
+            </Button>
+          )}
+
+          {shouldShowAnonymized && isSaved && (
             <Button
               variant="outline"
               size="sm"

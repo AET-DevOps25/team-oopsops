@@ -43,8 +43,6 @@ const DocumentParagraph = ({
 
   for (const item of sortedSensitive) {
     const index = paragraph.paragraph.indexOf(item.replacement, lastIndex);
-    console.log("item", item);
-    console.log("seraching for item ", item.replacement, "at index",index);
     if (index > -1) {
       // Add text before sensitive info
       if (index > lastIndex) {

@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { DocumentContent } from "@/types/documentContent";
+import { ChangedTerm } from "@/types/anonymize";
 import { anonymizeDocument } from '@/services/genaiService';
+import { saveAnonymization } from '@/services/anonymizeService';
+import { downloadAnonymizedPdf } from "@/services/anonymizeService";
+
 
 
 const levelMap = {
@@ -14,10 +18,14 @@ export const useAnonymization = (
   documentData: DocumentContent,
   setDocumentData: (data: DocumentContent) => void,
   isAnonymized: boolean,
-  setIsAnonymized: (value: boolean) => void
+  setIsAnonymized: (value: boolean) => void,
+  isSaved: boolean,
+  setIsSaved: (value: boolean) => void
 ) => {
   const [anonymizationLevel, setAnonymizationLevel] = useState(2);
   const [hasManualEdits, setHasManualEdits] = useState(false);
+  const [anonymizationId, setAnonymizationId] = useState<string | null>(null);
+
 
   const handleAnonymizationLevelChange = (value: number[]) => {
     setAnonymizationLevel(value[0]);
@@ -87,7 +95,7 @@ export const useAnonymization = (
         text: currentEditItem.text,
         replacement: tempReplacement,
       });
-      console.log("currentEditItem Text",currentEditItem.text);
+      console.log("currentEditItem Text", currentEditItem.text);
       newDocumentData.paragraph = newDocumentData.paragraph.replace(
         currentEditItem.text,
         tempReplacement
@@ -111,16 +119,72 @@ export const useAnonymization = (
 
     setDocumentData(newDocumentData);
     setHasManualEdits(true);
+    setIsSaved(false);
+
+    console.log(newDocumentData);
 
     toast.success("Edit saved", {
       description: "The changes to anonymized text have been applied.",
     });
   };
 
-  const handleDownload = (type: "anonymized" | "summary") => {
-    toast.info(`Downloading ${type} document`, {
+  const handleDownload = async(type: "anonymized" | "summary") => {
+    if (type !== "anonymized") return; 
+    if (!anonymizationId) {
+      toast.error("Download failed", {
+        description: "No saved anonymized document found.",
+      });
+      return;
+    }
+
+    toast.info("Downloading anonymized PDF", {
       description: "Your file will download shortly.",
     });
+
+    try {
+      await downloadAnonymizedPdf(anonymizationId); // ✅ Trigger download
+    } catch (err) {
+      toast.error("Download failed", {
+        description: "Something went wrong while downloading the PDF.",
+      });
+      console.error("Download error:", err);
+    }
+  };
+
+  const handleSave = async () => {
+    toast.info("Saving document", {
+      description: "Anonymized document is being saved",
+    });
+
+    try {
+
+      const currentDocumentData = JSON.parse(sessionStorage.getItem("currentDocument")!);
+      const changedTerms: ChangedTerm[] = documentData.sensitive.map(({ text, replacement }) => ({
+        original: text,
+        anonymized: replacement,
+      }));
+
+      console.log("current Document Data", currentDocumentData);
+
+      const response = await saveAnonymization(currentDocumentData.id, {
+        originalText: currentDocumentData.documentText,
+        anonymizedText: documentData.paragraph,
+        level: levelMap[anonymizationLevel],
+        changedTerms: changedTerms,
+      });
+      console.log("Anonymization saving response:", response);
+      setIsSaved(true);
+      setAnonymizationId(response.id); 
+
+      toast.success("Saving complete", {
+        description: "Your document has been saved successfully.",
+      });
+    } catch (err) {
+      toast.error("Saving failed", {
+        description: "Something went wrong while saving the anonymized document.",
+      });
+      console.error("Anonymization Saving error:", err);
+    }
   };
 
   return {
@@ -132,5 +196,8 @@ export const useAnonymization = (
     getLevelDescription,
     handleSaveEdit,
     handleDownload,
+    handleSave,
+    isSaved,
+    setIsSaved,
   };
 };
