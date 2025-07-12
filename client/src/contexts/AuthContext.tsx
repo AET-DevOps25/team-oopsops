@@ -1,7 +1,6 @@
 import React, {
   createContext,
   useState,
-  useEffect,
   useContext,
   ReactNode,
 } from "react";
@@ -18,18 +17,22 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
+  // Initialize from localStorage synchronously
+  const [user, setUser] = useState<User | null>(() => {
     const token = localStorage.getItem("access_token");
-    if (token) {
+    if (!token) return null;
+
+    try {
       const decoded = jwtDecode<DecodedToken>(token);
-      setUser({
+      return {
         username: decoded.preferred_username,
         email: decoded.email,
-      });
+      };
+    } catch {
+      localStorage.removeItem("access_token");
+      return null;
     }
-  }, []);
+  });
 
   const login = (token: string) => {
     localStorage.setItem("access_token", token);
@@ -47,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, isAuthenticated: !!user }}
+      value={{ user, login, logout, isAuthenticated: Boolean(user) }}
     >
       {children}
     </AuthContext.Provider>
@@ -55,9 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
+  return ctx;
 };
