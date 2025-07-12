@@ -49,13 +49,13 @@ public class AnonymizationController {
             @RequestBody AnonymizationRequestBody requestBody) {
         Optional<AnonymizationDto> existing = anonymizationService.findByDocumentId(documentId);
 
-
         AnonymizationDto dto;
         if (existing.isPresent()) {
             dto = new AnonymizationDto(
                     existing.get().id(),
                     OffsetDateTime.now(),
                     documentId,
+                    requestBody.userId(),
                     requestBody.originalText(),
                     requestBody.anonymizedText(),
                     requestBody.level(),
@@ -65,6 +65,7 @@ public class AnonymizationController {
                     null,
                     OffsetDateTime.now(),
                     documentId,
+                    requestBody.userId(),
                     requestBody.originalText(),
                     requestBody.anonymizedText(),
                     requestBody.level(),

@@ -11,6 +11,7 @@ public record AnonymizationDto(
     UUID id,
     OffsetDateTime created,
     UUID documentId,
+    UUID userId,
     String originalText,
     String anonymizedText,
     String anonymization_level,
@@ -20,6 +21,7 @@ public record AnonymizationDto(
             entity.getId(),
             entity.getCreated(),
             entity.getDocumentId(),
+            entity.getUserId(),
             entity.getOriginalText(),
             entity.getAnonymizedText(),
             entity.getAnonymization_level(),
@@ -37,6 +39,7 @@ public record AnonymizationDto(
             entity.setId(this.id);
         }
         entity.setDocumentId(documentId);
+        entity.setUserId(userId);
         entity.setOriginalText(originalText);
         entity.setAnonymizedText(anonymizedText);
         entity.setAnonymization_level(anonymization_level);

@@ -30,6 +30,7 @@ public class AnonymizationService {
             entity = anonymizationRepository.findById(dto.id()).orElseThrow();
             entity.setCreated(dto.created());
             entity.setDocumentId(dto.documentId());
+            entity.setUserId(dto.userId());
             entity.setOriginalText(dto.originalText());
             entity.setAnonymizedText(dto.anonymizedText());
             entity.setAnonymization_level(dto.anonymization_level());

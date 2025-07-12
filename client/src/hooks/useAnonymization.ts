@@ -142,7 +142,7 @@ export const useAnonymization = (
     });
 
     try {
-      await downloadAnonymizedPdf(anonymizationId); // ✅ Trigger download
+      await downloadAnonymizedPdf(anonymizationId); 
     } catch (err) {
       toast.error("Download failed", {
         description: "Something went wrong while downloading the PDF.",
@@ -164,15 +164,14 @@ export const useAnonymization = (
         anonymized: replacement,
       }));
 
-      console.log("current Document Data", currentDocumentData);
 
       const response = await saveAnonymization(currentDocumentData.id, {
         originalText: currentDocumentData.documentText,
         anonymizedText: documentData.paragraph,
+        userId: currentDocumentData.userId,
         level: levelMap[anonymizationLevel],
         changedTerms: changedTerms,
       });
-      console.log("Anonymization saving response:", response);
       setIsSaved(true);
       setAnonymizationId(response.id); 
 

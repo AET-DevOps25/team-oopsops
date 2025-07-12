@@ -5,7 +5,7 @@ const anonymizeApi = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1/anonymization`,
 });
 
-export async function saveAnonymization(documentId: string, body: AnonymizationRequestBody) {
+export async function saveAnonymization(documentId: string,body: AnonymizationRequestBody) {
   const response = await anonymizeApi.post(`/${documentId}/add`, body);
   return response.data;
 }
