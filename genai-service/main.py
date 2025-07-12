@@ -68,7 +68,7 @@ def summarize(request: SummarizeRequest):
         "level": request.level,
         "summarized_text": None
     })
-    return GenAiResponse(reponseText=result["summarized_text"])
+    return GenAiResponse(responseText=result["summarized_text"])
 
 @app.post("/api/v1/genai/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
