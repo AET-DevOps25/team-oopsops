@@ -39,7 +39,7 @@ export default function Register() {
 
       toast.success("Registration successful! Redirecting...");
       setTimeout(() => {
-        navigate("/");
+        navigate("/home");
       }, 1000);
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
