@@ -4,9 +4,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import oopsops.app.document.dto.DocumentDto;
-/*import oopsops.app.document.models.AnonymizeRequest;
-import oopsops.app.document.models.GenAiResponse;*/
 import oopsops.app.document.repository.DocumentRepository;
 import oopsops.app.document.entity.Document;
 import oopsops.app.document.exception.InvalidFileTypeException;
