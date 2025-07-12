@@ -52,27 +52,34 @@ export const useSummarization = (documentData: DocumentContent,
 
     doc.save(`${documentData.title}_summary.pdf`);
   };
-
   const handleGenerateSummary = async () => {
-    setIsSummarizing(true);
+    
 
     toast.info("Generating summary...", {
       description: "Please wait while we create a summary of your document.",
     });
-    const response = await summarize(documentData.paragraph, levelMap[summarizationLevel]);
-    console.log("Summary response:", response);
+    try {
+      setIsSummarizing(true);
+      const response = await summarize(documentData.paragraph, levelMap[summarizationLevel]);
+      console.log("Summary response:", response);
 
-    const newSummary = response.responseText;
-    setSummary(newSummary);
-    setDocumentData(prev => ({
-      ...prev,
-      summary: newSummary,
-    }));
-    toast.success("Summary generated", {
-      description: "Document summary has been created successfully.",
-    });
-    setIsSummarizing(false);
-  };
+      const newSummary = response.responseText;
+      setSummary(newSummary);
+      setDocumentData(prev => ({
+        ...prev,
+        summary: newSummary,
+      }));
+      toast.success("Summary generated", {
+        description: "Document summary has been created successfully.",
+      });
+      setIsSummarizing(false);
+    } catch (err) {
+      toast.error("Summarization failed", {
+        description: "Something went wrong while contacting the backend.",
+      });
+      console.error("Summarization error:", err);
+  }
+};
 
   return {
     summarizationLevel,
