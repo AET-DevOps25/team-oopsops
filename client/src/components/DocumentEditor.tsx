@@ -39,11 +39,22 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     handleSave,
   } = useAnonymization(documentData, setDocumentData,isAnonymized, setIsAnonymized, isSaved, setIsSaved);
 
-  const { isSummarizing, summary, handleGenerateSummary } = useSummarization(
-    documentData?.summary ?? ''
-  );
+  const {
+  summarizationLevel,
+  isSummarizing,
+  summary,
+  handleSummarizationLevel,
+  handleGenerateSummary,
+  getSummarizationLevelDescription,
+  handleDownloadSummary
+} = useSummarization(documentData, setDocumentData);
 
-  
+  useEffect(() => {
+  if (documentData) {
+    console.log("Current documentData:", documentData);
+  }
+}, [documentData]);
+
 
   useEffect(() => {
     console.log('Fetching document with ID:', documentId);
@@ -57,6 +68,7 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
       sensitive: [],
       summary: ""
     };
+
 
     setDocumentData(realContent);
     }
@@ -136,10 +148,13 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
 
         <TabsContent value="summarize">
           <SummarizationPanel
+            summarizationLevel={summarizationLevel}
             isSummarizing={isSummarizing}
             summary={summary}
             onGenerateSummary={handleGenerateSummary}
-            onDownload={handleDownload}
+            onSummarizationLevelChange={handleSummarizationLevel}
+            getLevelDescription={getSummarizationLevelDescription}
+            onDownload={handleDownloadSummary}
           />
         </TabsContent>
       </Tabs>

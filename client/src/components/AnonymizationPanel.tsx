@@ -35,6 +35,7 @@ const AnonymizationPanel = ({
   isSaved,
   onSave,
 }: AnonymizationPanelProps) => {
+  console.log("AnonymizationPanel rendered with data:", documentData);
   const shouldShowAnonymized = isAnonymized || hasManualEdits;
 
   return (
