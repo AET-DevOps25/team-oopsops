@@ -56,7 +56,7 @@ def health_check():
     return {"status": "ok"}
 
 
-@app.post("/anonymize", response_model=GenAiResponse)
+@app.post("/api/v1/genai/anonymize", response_model=GenAiResponse)
 def anonymize(request: AnonymizeRequest):
     try:
         result = anonymizer_graph.invoke(
@@ -69,15 +69,15 @@ def anonymize(request: AnonymizeRequest):
             }
         )
 
-        changed_terms = result[
-            "changed_terms"
-        ]  # Expect this to be a list of {"original": ..., "anonymized": ...}
+    changed_terms = result["changed_terms"]  
+    
+    anonymized_text = call_anonymization_service(
+        original_text=request.originalText,
+        changed_terms=changed_terms
+    )
 
-        anonymized_text = call_anonymization_service(
-            original_text=request.originalText, changed_terms=changed_terms
-        )
-
-        return GenAiResponse(reponseText=anonymized_text)
+        return GenAiResponse(responseText=anonymized_text,
+                         changedTerms=changed_terms)
     except RuntimeError as e:
         if "Service unavailable" in str(e):
             raise HTTPException(status_code=503, detail=str(e))
@@ -101,7 +101,7 @@ def call_anonymization_service(
         raise RuntimeError("Service unavailable")
 
 
-@app.post("/summarize", response_model=GenAiResponse)
+@app.post("/api/v1/genai/summarize", response_model=GenAiResponse)
 def summarize(request: SummarizeRequest):
     result = summarizer_graph.invoke(
         {
@@ -112,8 +112,7 @@ def summarize(request: SummarizeRequest):
     )
     return GenAiResponse(reponseText=result["summarized_text"])
 
-
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/api/v1/genai/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     messages = []
     if request.document:

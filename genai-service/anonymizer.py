@@ -30,7 +30,7 @@ def extract_terms(state: AnonymizerState):
 
     level_prompt_map = {
         "light": "Extract a list of names to anonymize. Replace each with a generic label like 'Person A'.",
-        "medium": "Extract a list of names, dates, and locations. Replace with generic labels like 'Person A', 'Date A', etc.",
+        "medium": "Extract a list of names, dates, locations. Replace with generic labels like 'Person A', 'Date A', etc.",
         "high": "Extract names, dates, locations, genders, professions, and identifying info. Replace with 'Person A', 'Location B', etc."
     }
 

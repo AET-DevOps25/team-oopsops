@@ -38,11 +38,11 @@ const DocumentParagraph = ({
   // Sort by position in text to process in order
   const sortedSensitive = [...paragraph.sensitive].sort(
     (a, b) =>
-      paragraph.paragraph.indexOf(a.text) - paragraph.paragraph.indexOf(b.text)
+      paragraph.paragraph.indexOf(a.replacement) - paragraph.paragraph.indexOf(b.replacement)
   );
 
   for (const item of sortedSensitive) {
-    const index = paragraph.paragraph.indexOf(item.text, lastIndex);
+    const index = paragraph.paragraph.indexOf(item.replacement, lastIndex);
     if (index > -1) {
       // Add text before sensitive info
       if (index > lastIndex) {
@@ -53,7 +53,6 @@ const DocumentParagraph = ({
         );
       }
 
-      // Add Git-style diff highlighting for anonymized text
       segments.push(
         <span
           key={`sensitive-${index}`}
@@ -68,7 +67,7 @@ const DocumentParagraph = ({
         </span>
       );
 
-      lastIndex = index + item.text.length;
+      lastIndex = index + item.replacement.length;
     }
   }
 

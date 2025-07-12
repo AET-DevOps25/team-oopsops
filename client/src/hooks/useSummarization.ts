@@ -6,6 +6,7 @@ export const useSummarization = (documentSummary: string) => {
   const [summary, setSummary] = useState('');
 
   const handleGenerateSummary = () => {
+    console.log('Generating summary for document:', documentSummary);
     setIsSummarizing(true);
 
     setTimeout(() => {

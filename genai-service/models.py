@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Literal, List, Optional, Dict, Any
+from anonymizer import ChangedTerm
 
 
 class AnonymizeRequest(BaseModel):
@@ -8,8 +9,8 @@ class AnonymizeRequest(BaseModel):
 
 
 class GenAiResponse(BaseModel):
-    reponseText: str
-    status: str = "success"
+    responseText: str
+    changedTerms: List[ChangedTerm]
 
 class SummarizeRequest(BaseModel):
     originalText: str
