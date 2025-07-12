@@ -2,35 +2,32 @@ package oopsops.app.document;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import oopsops.app.document.service.DocumentService;
+import oopsops.app.document.controller.DocumentController;
+import oopsops.app.document.repository.DocumentRepository;
 
-@Testcontainers
+import static org.junit.jupiter.api.Assertions.*;
+
 @SpringBootTest
 @ActiveProfiles("test")
 class DocumentServiceApplicationTests {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
-        .withDatabaseName("documentdb")
-        .withUsername("dev_user")
-        .withPassword("dev_pass");
-
-    @DynamicPropertySource
-    static void overrideProps(DynamicPropertyRegistry registry) {
-        // Point Spring’s DataSource at the Testcontainer’s JDBC URL
-        registry.add("spring.datasource.url",    postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Test
     void contextLoads() {
-        // If the app context starts without exception, the test passes.
+        assertNotNull(applicationContext);
+    }
+
+    @Test
+    void requiredBeansArePresent() {
+        // Verify critical beans are properly wired
+        assertNotNull(applicationContext.getBean(DocumentService.class));
+        assertNotNull(applicationContext.getBean(DocumentController.class));
+        assertNotNull(applicationContext.getBean(DocumentRepository.class));
     }
 }

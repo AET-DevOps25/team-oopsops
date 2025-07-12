@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,20 +32,19 @@ public class DocumentController {
     public ResponseEntity<List<DocumentDto>> getAllDocuments() {
         List<Document> documents = documentService.getAllDocuments();
         List<DocumentDto> dtos = documents.stream()
-            .map(document -> new DocumentDto(
-                document.getId(),
-                document.getUserId(),
-                document.getFileName(),
-                document.getFileUrl(),
-                document.getStatus(),
-                document.getUploadDate()
-            ))
-            .collect(Collectors.toList());
+                .map(document -> new DocumentDto(
+                        document.getId(),
+                        document.getUserId(),
+                        document.getFileName(),
+                        document.getFileUrl(),
+                        document.getStatus(),
+                        document.getUploadDate()))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<DocumentDto> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<DocumentDto> upload(@RequestParam(value = "file", required = false) MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
             throw new InvalidFileTypeException("No file uploaded");
@@ -61,18 +59,16 @@ public class DocumentController {
         Document document = documentService.uploadAndProcess(userId, file);
 
         var dto = new DocumentDto(
-            document.getId(),
-            document.getUserId(),
-            document.getFileName(),
-            document.getFileUrl(),
-            document.getStatus(),
-            document.getUploadDate()
-        );
+                document.getId(),
+                document.getUserId(),
+                document.getFileName(),
+                document.getFileUrl(),
+                document.getStatus(),
+                document.getUploadDate());
 
         return ResponseEntity
-            .created(URI.create("/api/v1/documents/" + document.getId()))
-            .body(dto);
+                .created(URI.create("/api/v1/documents/" + document.getId()))
+                .body(dto);
     }
-
 
 }
