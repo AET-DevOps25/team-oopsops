@@ -10,6 +10,11 @@ public class ChangedTerm {
     public ChangedTerm() {
     }
 
+    public ChangedTerm(String original, String anonymized) {
+        this.original = original;
+        this.anonymized = anonymized;
+    }
+
     public String getOriginal() {
         return original;
     }
