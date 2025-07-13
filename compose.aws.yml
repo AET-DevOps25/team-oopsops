@@ -1,0 +1,87 @@
+services:
+  reverse-proxy:
+    image: traefik:v3.4
+    command:
+      - '--providers.docker=true'
+      - '--providers.docker.exposedByDefault=false'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--entrypoints.web.http.redirections.entryPoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entryPoint.scheme=https'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}' # Use an environment variable for the email
+      - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+
+  postgres:
+    image: postgres:alpine
+    container_name: oopsops-dbs
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./create-multiple-dbs.sh:/docker-entrypoint-initdb.d/create-multiple-dbs.sh
+    restart: unless-stopped
+
+  document-service:
+    image: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/documentdb
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.document-service.rule=Host(`${API_HOST}`) && PathPrefix(`/api/v1/documents`)'
+      - 'traefik.http.services.document-service.loadbalancer.server.port=8091'
+      - 'traefik.http.routers.document-service.entrypoints=websecure'
+      - 'traefik.http.routers.document-service.tls.certresolver=letsencrypt'
+
+  authentication-service:
+    image: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.auth-service.rule=Host(`${API_HOST}`) && PathPrefix(`/api/v1/auth`)' # Assuming /api/v1/auth is your base path
+      - 'traefik.http.services.auth-service.loadbalancer.server.port=8092'
+      - 'traefik.http.routers.auth-service.entrypoints=websecure'
+      - 'traefik.http.routers.auth-service.tls.certresolver=letsencrypt'
+
+  genai-service:
+    image: ghcr.io/aet-devops25/team-oopsops/genai-service:latest
+    restart: unless-stopped
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.genai-service.rule=Host(`${API_HOST}`) && PathPrefix(`/api/v1/genai`)' # Assuming a base path
+      - 'traefik.http.services.genai-service.loadbalancer.server.port=8000'
+      - 'traefik.http.routers.genai-service.entrypoints=websecure'
+      - 'traefik.http.routers.genai-service.tls.certresolver=letsencrypt'
+
+  client:
+    image: ghcr.io/aet-devops25/team-oopsops/client:latest
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=https://${API_HOST}
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.client.rule=Host(`${CLIENT_HOST}`)'
+      - 'traefik.http.services.client.loadbalancer.server.port=80'
+      - 'traefik.http.routers.client.entrypoints=websecure'
+      - 'traefik.http.routers.client.tls.certresolver=letsencrypt'
+
+volumes:
+  postgres-data:
+  letsencrypt:

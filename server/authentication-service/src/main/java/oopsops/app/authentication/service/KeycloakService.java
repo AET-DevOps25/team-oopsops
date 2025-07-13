@@ -40,6 +40,8 @@ public class KeycloakService {
     @Value("${keycloak.client-secret}")
     private String clientSecret;
 
+    private RestTemplate restTemplate = new RestTemplate();
+
     public void registerUser(String username, String email, String password) {
         Keycloak keycloak = KeycloakBuilder.builder()
                 .serverUrl(keycloakUrl)
@@ -63,31 +65,53 @@ public class KeycloakService {
         keycloak.realm(realm).users().create(user);
     }
 
-    public String getAccessToken(String username, String password) {
-        RestTemplate restTemplate = new RestTemplate();
-
+    public Map<String, Object> refreshWithToken(String refreshToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "refresh_token");
+        form.add("client_id", clientId);
+        form.add("client_secret", clientSecret);
+        form.add("refresh_token", refreshToken);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token",
+                new HttpEntity<>(form, headers),
+                Map.class);
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Refresh failed: " + response.getStatusCode());
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        return body;
+    }
+
+    public Map<String, Object> loginWithPassword(String username, String password) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        var form = new LinkedMultiValueMap<String, String>();
         form.add("grant_type", "password");
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret);
         form.add("username", username);
         form.add("password", password);
 
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
-
-        ResponseEntity<Map> response = restTemplate.postForEntity(
+        var response = restTemplate.postForEntity(
                 keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token",
-                entity,
+                new HttpEntity<>(form, headers),
                 Map.class);
 
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            return (String) response.getBody().get("access_token");
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Login failed: " + response.getStatusCode());
         }
 
-        throw new RuntimeException("Login failed: " + response.getStatusCode());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        return body;
     }
 
 }
