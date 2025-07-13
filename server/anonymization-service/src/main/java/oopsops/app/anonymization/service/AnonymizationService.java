@@ -20,7 +20,6 @@ public class AnonymizationService {
     }
 
     public List<AnonymizationEntity> getAllAnonymizations(UUID userId) {
-        // return anonymizationRepository.findAll();
         return anonymizationRepository.findAllByUserId(userId);
     }
 
