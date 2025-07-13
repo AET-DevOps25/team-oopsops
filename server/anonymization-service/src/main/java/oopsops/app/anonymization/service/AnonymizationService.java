@@ -19,8 +19,8 @@ public class AnonymizationService {
         this.anonymizationRepository = anonymizationRepository;
     }
 
-    public List<AnonymizationEntity> getAllAnonymizations() {
-        return anonymizationRepository.findAll();
+    public List<AnonymizationEntity> getAllAnonymizations(UUID userId) {
+        return anonymizationRepository.findAllByUserId(userId);
     }
 
     public AnonymizationDto save(AnonymizationDto dto) {

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -33,11 +34,16 @@ public class UserService {
     }
 
     @Transactional
-    public String loginWithPassword(String username, String password) {
+    public Map<String, Object> loginWithPassword(String username, String password) {
         if (repository.findByUsername(username).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist. Please register first.");
         }
 
-        return keycloakService.getAccessToken(username, password);
+        return keycloakService.loginWithPassword(username, password);
     }
+
+    public Map<String, Object> refreshWithToken(String refreshToken) {
+        return keycloakService.refreshWithToken(refreshToken);
+    }
+
 }

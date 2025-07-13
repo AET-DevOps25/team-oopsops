@@ -1,5 +1,3 @@
-
-
 export type ChangedTerm = {
   original: string;
   anonymized: string;
@@ -8,7 +6,17 @@ export type ChangedTerm = {
 export type AnonymizationRequestBody = {
   originalText: string;
   anonymizedText: string;
-  userId: string;
   level: string;
   changedTerms: ChangedTerm[];
 };
+
+export type AnonymizationDto = {
+  id:                   string
+  created:              string
+  documentId:           string
+  userId:               string
+  originalText:         string
+  anonymizedText:       string
+  anonymization_level:  string
+  changedTerms:         ChangedTerm[]
+}

@@ -1,0 +1,70 @@
+{
+  "openai_anonymization_responses": {
+    "light": {
+      "anonymized_text": "[NAME] lives at [ADDRESS]. His SSN is 123-45-6789.",
+      "entities_found": [
+        {"type": "PERSON", "text": "John Doe", "start": 0, "end": 8},
+        {"type": "ADDRESS", "text": "123 Main Street", "start": 18, "end": 33}
+      ]
+    },
+    "medium": {
+      "anonymized_text": "[NAME] lives at [ADDRESS]. His SSN is [SSN].",
+      "entities_found": [
+        {"type": "PERSON", "text": "John Doe", "start": 0, "end": 8},
+        {"type": "ADDRESS", "text": "123 Main Street", "start": 18, "end": 33},
+        {"type": "SSN", "text": "123-45-6789", "start": 47, "end": 58}
+      ]
+    },
+    "hard": {
+      "anonymized_text": "[REDACTED] lives at [REDACTED]. His [REDACTED] is [REDACTED].",
+      "entities_found": [
+        {"type": "PERSON", "text": "John Doe", "start": 0, "end": 8},
+        {"type": "ADDRESS", "text": "123 Main Street", "start": 18, "end": 33},
+        {"type": "SSN", "text": "123-45-6789", "start": 47, "end": 58}
+      ]
+    }
+  },
+  "openai_summarization_responses": {
+    "high_sensitivity": {
+      "summary": "This document contains personal information including name, address, phone, email, and SSN.",
+      "key_points": [
+        "Personal identification data",
+        "Contact information",
+        "Financial identifiers"
+      ],
+      "sensitivity_level": "high"
+    },
+    "medium_sensitivity": {
+      "summary": "Document contains some personal information requiring moderate anonymization.",
+      "key_points": [
+        "Personal names",
+        "Email addresses"
+      ],
+      "sensitivity_level": "medium"
+    },
+    "low_sensitivity": {
+      "summary": "Document contains minimal personal information.",
+      "key_points": [
+        "Basic personal references"
+      ],
+      "sensitivity_level": "low"
+    }
+  },
+  "openai_conversation_responses": {
+    "anonymization_suggestion": "I recommend anonymizing the name and SSN for privacy protection.",
+    "sensitivity_analysis": "This document contains high-risk personal information that should be anonymized.",
+    "general_query": "The document contains personal information including name, address, and Social Security Number."
+  },
+  "vector_store_responses": {
+    "similarity_search": [
+      {
+        "content": "Sample document content with personal data",
+        "metadata": {"doc_id": "doc1", "source": "test.pdf"}
+      },
+      {
+        "content": "Another personal document",
+        "metadata": {"doc_id": "doc2", "source": "test2.pdf"}
+      }
+    ]
+  }
+}
