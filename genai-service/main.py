@@ -69,21 +69,24 @@ def anonymize(request: AnonymizeRequest):
             }
         )
 
-    changed_terms = result["changed_terms"]  
-    
-    anonymized_text = call_anonymization_service(
-        original_text=request.originalText,
-        changed_terms=changed_terms
-    )
+        changed_terms = result["changed_terms"]
+        anonymized_text = call_anonymization_service(
+            original_text=request.originalText,
+            changed_terms=changed_terms
+        )
 
-        return GenAiResponse(responseText=anonymized_text,
-                         changedTerms=changed_terms)
+        return GenAiResponse(
+            responseText=anonymized_text,
+            changedTerms=changed_terms
+        )
+
     except RuntimeError as e:
         if "Service unavailable" in str(e):
             raise HTTPException(status_code=503, detail=str(e))
         raise HTTPException(status_code=500, detail="Internal server error")
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
 
 def call_anonymization_service(
