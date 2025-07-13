@@ -27,6 +27,7 @@ export const useAnonymization = (
   const [anonymizationId, setAnonymizationId] = useState<string | null>(null);
 
 
+
   const handleAnonymizationLevelChange = (value: number[]) => {
     setAnonymizationLevel(value[0]);
   };
@@ -69,7 +70,7 @@ export const useAnonymization = (
   const getLevelDescription = (level: number) => {
     switch (level) {
       case 1:
-        return "Light - Only names and direct identifiers";
+        return "Short - Only names and direct identifiers";
       case 2:
         return "Medium - Names, contact details, and locations";
       case 3:

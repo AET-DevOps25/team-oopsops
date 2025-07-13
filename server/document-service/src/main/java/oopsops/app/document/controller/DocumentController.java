@@ -68,7 +68,7 @@ public class DocumentController {
 
     @PostMapping("/upload")
     public ResponseEntity<DocumentDto> upload(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) {
 
         if (file == null || file.isEmpty()) {

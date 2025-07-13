@@ -6,13 +6,15 @@ import AnonymizationPanel from './AnonymizationPanel';
 import SummarizationPanel from './SummarizationPanel';
 import EditAnonymizedDialog from './EditAnonymizedDialog';
 import { DocumentContent } from '@/types/documentContent';
+import { toast } from "sonner";
+
 
 type DocumentEditorProps = {
   documentId?: string | null;
 };
 
 const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
-  
+
   const [activeTab, setActiveTab] = useState('anonymize');
   const [documentData, setDocumentData] = useState<DocumentContent>();
   const [selectedText, setSelectedText] = useState<string>('');
@@ -37,13 +39,24 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     handleSaveEdit,
     handleDownload,
     handleSave,
-  } = useAnonymization(documentData, setDocumentData,isAnonymized, setIsAnonymized, isSaved, setIsSaved);
+  } = useAnonymization(documentData, setDocumentData, isAnonymized, setIsAnonymized, isSaved, setIsSaved);
 
-  const { isSummarizing, summary, handleGenerateSummary } = useSummarization(
-    documentData?.summary ?? ''
-  );
+  const {
+    summarizationLevel,
+    isSummarizing,
+    summary,
+    handleSummarizationLevel,
+    handleGenerateSummary,
+    getSummarizationLevelDescription,
+    handleDownloadSummary
+  } = useSummarization(documentData, setDocumentData);
 
-  
+  useEffect(() => {
+    if (documentData) {
+      console.log("Current documentData:", documentData);
+    }
+  }, [documentData]);
+
 
   useEffect(() => {
     console.log('Fetching document with ID:', documentId);
@@ -52,13 +65,14 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     if (documentInfo) {
       const parsedInfo = JSON.parse(documentInfo);
       const realContent: DocumentContent = {
-      title: (parsedInfo.fileName?.replace(/\.pdf$/i, "") || "Untitled"),
-      paragraph: parsedInfo.documentText || "",
-      sensitive: [],
-      summary: ""
-    };
+        title: (parsedInfo.fileName?.replace(/\.pdf$/i, "") || "Untitled"),
+        paragraph: parsedInfo.documentText || "",
+        sensitive: [],
+        summary: ""
+      };
 
-    setDocumentData(realContent);
+
+      setDocumentData(realContent);
     }
   }, [documentId]);
 
@@ -110,11 +124,22 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
       <Tabs
         defaultValue="anonymize"
         value={activeTab}
-        onValueChange={setActiveTab}
+        onValueChange={(value) => {
+          if (value === 'summarize' && !isAnonymized) {
+            toast.warning("Please anonymize your document before summarizing.");
+            return;
+          }
+          setActiveTab(value);
+        }}
       >
         <TabsList className="mb-6">
           <TabsTrigger value="anonymize">Anonymize</TabsTrigger>
-          <TabsTrigger value="summarize">Summarize</TabsTrigger>
+          <TabsTrigger
+            value="summarize"
+            className={!isAnonymized ? 'pointer-events-auto text-muted-foreground opacity-50' : ''}
+          >
+            Summarize
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="anonymize">
@@ -136,10 +161,13 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
 
         <TabsContent value="summarize">
           <SummarizationPanel
+            summarizationLevel={summarizationLevel}
             isSummarizing={isSummarizing}
             summary={summary}
             onGenerateSummary={handleGenerateSummary}
-            onDownload={handleDownload}
+            onSummarizationLevelChange={handleSummarizationLevel}
+            getLevelDescription={getSummarizationLevelDescription}
+            onDownload={handleDownloadSummary}
           />
         </TabsContent>
       </Tabs>

@@ -10,7 +10,7 @@ class AnonymizeRequest(BaseModel):
 
 class GenAiResponse(BaseModel):
     responseText: str
-    changedTerms: List[ChangedTerm]
+    changedTerms: Optional[List[ChangedTerm]] = None
 
 class SummarizeRequest(BaseModel):
     originalText: str
