@@ -24,7 +24,7 @@ public class AnonymizationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "UUID", updatable = false, nullable = false)
+    @Column(columnDefinition = "UUID", nullable = false)
     private UUID id;
 
     @Column(name = "created", nullable = false)
@@ -32,6 +32,9 @@ public class AnonymizationEntity {
 
     @Column(name = "document_id", nullable = false)
     private UUID documentId;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @Column(name = "original_text", nullable = false)
     private String originalText;
@@ -107,10 +110,19 @@ public class AnonymizationEntity {
         this.created = created;
     }
 
-    public AnonymizationEntity(final UUID id, final OffsetDateTime created, final UUID documentId, final String originalText, final String anonymizedText, final String anonymization_level, final List<ChangedTerm> changedTerms) {
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(final UUID userId) {
+        this.userId = userId;
+    }
+
+    public AnonymizationEntity(final UUID id, final OffsetDateTime created, final UUID documentId, final UUID userId, final String originalText, final String anonymizedText, final String anonymization_level, final List<ChangedTerm> changedTerms) {
         this.id = id;
         this.created = created;
         this.documentId = documentId;
+        this.userId = userId;
         this.originalText = originalText;
         this.anonymizedText = anonymizedText;
         this.anonymization_level = anonymization_level;

@@ -42,14 +42,12 @@ public class DocumentService {
     @Transactional
     public Document uploadAndProcess(UUID userId, MultipartFile file) {
 
-        // For now we only accept PDF files
         if (!"application/pdf".equals(file.getContentType())) {
             throw new InvalidFileTypeException("Only PDFs allowed");
         }
 
         String fileUrl = storageService.store(file);
 
-        // Create a new Document entity
         Document doc = new Document();
         doc.setUserId(userId);
         doc.setFileName(file.getOriginalFilename());
@@ -68,6 +66,14 @@ public class DocumentService {
         doc.setStatus("PROCESSED");
 
         return documentRepository.save(doc);
+    }
+
+    public List<Document> getAllByUser(UUID userId) {
+        return documentRepository.findAllByUserId(userId);
+    }
+
+    public Optional<Document> getByUserAndId(UUID userId, UUID docId) {
+        return documentRepository.findByIdAndUserId(docId, userId);
     }
 
 }

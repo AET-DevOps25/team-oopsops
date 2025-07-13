@@ -1,4 +1,3 @@
-import React from "react";
 import Navbar from "@/components/Navbar";
 import DocumentArchive from "@/components/DocumentArchive";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ const Archive = () => {
       <main className="flex-1 pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-6">
-            <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
+            <Button variant="ghost" onClick={() => navigate("/home")} className="mb-4">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Home
             </Button>

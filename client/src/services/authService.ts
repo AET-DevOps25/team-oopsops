@@ -1,20 +1,23 @@
-import { RegistrationRequest } from "@/types/registration";
-import axios from "axios";
+import authApi from "@/api/authApi";
+import type { RegistrationRequest } from "@/types/registration";
 
-const authApi = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api/v1/authentication`,
-});
-
-export async function registerUser(data: RegistrationRequest): Promise<void> {
-  await authApi.post("/register", data, {
-    headers: { "Content-Type": "application/json" },
-  });
+export interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  refresh_expires_in: number;
 }
 
-export async function loginUser(data: { username: string; password: string }): Promise<string> {
-  const response = await authApi.post("/login", data, {
-    headers: { "Content-Type": "application/json" },
-  });
+export async function registerUser(data: RegistrationRequest): Promise<void> {
+  await authApi.post("/register", data);
+}
 
-  return response.data.access_token;
+export async function loginUser(data: { username: string; password: string }): Promise<TokenResponse> {
+  const resp = await authApi.post<TokenResponse>("/login", data);
+  return resp.data;
+}
+
+export async function refreshToken(refreshToken: string): Promise<TokenResponse> {
+  const resp = await authApi.post<TokenResponse>("/refresh", { refresh_token: refreshToken });
+  return resp.data;
 }

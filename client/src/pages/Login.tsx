@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { loginUser } from "@/services/authService";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
@@ -19,9 +18,8 @@ export default function LoginForm() {
     e.preventDefault();
 
     try {
-      const token = await loginUser({ username, password });
-      login(token);
-      navigate("/");
+      await login(username, password );
+      navigate("/home");
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
 
