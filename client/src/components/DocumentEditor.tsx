@@ -134,7 +134,12 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
       >
         <TabsList className="mb-6">
           <TabsTrigger value="anonymize">Anonymize</TabsTrigger>
-          <TabsTrigger value="summarize">Summarize</TabsTrigger>
+          <TabsTrigger
+            value="summarize"
+            className={!isAnonymized ? 'pointer-events-auto text-muted-foreground opacity-50' : ''}
+          >
+            Summarize
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="anonymize">
