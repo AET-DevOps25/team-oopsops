@@ -4,13 +4,12 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.http.HttpMethod;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -67,26 +66,27 @@ public class KeycloakService {
     }
 
     public Map<String, Object> refreshWithToken(String refreshToken) {
-        var form = new LinkedMultiValueMap<String, String>();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "refresh_token");
         form.add("client_id", clientId);
         form.add("client_secret", clientSecret);
         form.add("refresh_token", refreshToken);
 
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        ResponseEntity<Map<String, Object>> resp = restTemplate.exchange(
+        ResponseEntity<Map> response = restTemplate.postForEntity(
                 keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token",
-                HttpMethod.POST,
                 new HttpEntity<>(form, headers),
-                new ParameterizedTypeReference<Map<String, Object>>() {
-                });
+                Map.class);
 
-        if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
-            throw new RuntimeException("Refresh failed: " + resp.getStatusCode());
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Refresh failed: " + response.getStatusCode());
         }
-        return resp.getBody();
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        return body;
     }
 
     public Map<String, Object> loginWithPassword(String username, String password) {
@@ -108,7 +108,10 @@ public class KeycloakService {
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             throw new RuntimeException("Login failed: " + response.getStatusCode());
         }
-        return response.getBody();
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        return body;
     }
 
 }
