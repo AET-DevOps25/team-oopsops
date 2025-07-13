@@ -9,18 +9,12 @@ import java.nio.file.StandardCopyOption;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import oopsops.app.document.exception.PdfParsingException;
 import oopsops.app.document.service.PdfParsingService;
 
-@SpringBootTest
-@ActiveProfiles("test")
-class PdfParsingServiceTest {
+public class PdfParsingServiceTest {
 
-  @Autowired
-  PdfParsingService pdfParsingService;
+  private final PdfParsingService pdfParsingService = new PdfParsingService();
 
   @Test
   @DisplayName("extractText returns “Hi!” for sample.pdf")

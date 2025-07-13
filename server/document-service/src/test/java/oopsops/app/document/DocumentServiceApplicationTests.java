@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class DocumentServiceApplicationTests {
+public class DocumentServiceApplicationTests {
 
     @Autowired
     private ApplicationContext applicationContext;

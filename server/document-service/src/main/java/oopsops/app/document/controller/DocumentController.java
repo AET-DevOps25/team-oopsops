@@ -49,7 +49,7 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DocumentDto> getDocumentById(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID docId) {
+    public ResponseEntity<DocumentDto> getDocumentById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") UUID docId) {
         UUID userId = UUID.fromString(jwt.getSubject());
         Document document = documentService.getByUserAndId(userId, docId)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found"));
