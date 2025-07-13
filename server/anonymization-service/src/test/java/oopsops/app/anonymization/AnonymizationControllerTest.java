@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -75,6 +76,7 @@ public class AnonymizationControllerTest {
         when(anonymizationService.getAllAnonymizations(userId)).thenReturn(List.of(entity));
 
         mockMvc.perform(get("/api/v1/anonymization")
+                .with(csrf())
                 .with(jwt().jwt(jwt -> jwt.subject(userId.toString()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -88,6 +90,7 @@ public class AnonymizationControllerTest {
         when(anonymizationService.getAllAnonymizations(userId)).thenReturn(Arrays.asList());
 
         mockMvc.perform(get("/api/v1/anonymization")
+                .with(csrf())
                 .with(jwt().jwt(jwt -> jwt.subject(userId.toString()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -135,6 +138,7 @@ public class AnonymizationControllerTest {
         when(anonymizationService.save(any())).thenReturn(updatedDto);
 
         mockMvc.perform(post("/api/v1/anonymization/" + documentId + "/add")
+                .with(csrf())
                 .with(jwt().jwt(jwt -> jwt.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(body)))
@@ -142,8 +146,8 @@ public class AnonymizationControllerTest {
                 .andExpect(jsonPath("$.documentId").value(documentId.toString()))
                 .andExpect(jsonPath("$.originalText").value(body.originalText()))
                 .andExpect(jsonPath("$.anonymizedText").value(body.anonymizedText()))
-                .andExpect(jsonPath("$.changedTerms[0].originalTerm").value("John"))
-                .andExpect(jsonPath("$.changedTerms[0].anonymizedTerm").value("Person J"));
+                .andExpect(jsonPath("$.changedTerms[0].original").value("John"))
+                .andExpect(jsonPath("$.changedTerms[0].anonymized").value("Person J"));
 
         verify(anonymizationService).save(any());
     }
@@ -156,6 +160,7 @@ public class AnonymizationControllerTest {
                 new ChangedTerm("Johnathan", "Person B"),
                 new ChangedTerm("John", "Person A")));
         mockMvc.perform(post("/api/v1/anonymization/replace")
+                .with(jwt().jwt(jwt -> jwt.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
