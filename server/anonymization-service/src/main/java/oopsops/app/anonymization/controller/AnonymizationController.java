@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,17 +38,21 @@ public class AnonymizationController {
         this.anonymizationService = anonymizationService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<AnonymizationDto>> getAllAnonymizations() {
-        List<AnonymizationDto> anonymizationDtos = anonymizationService.getAllAnonymizations().stream()
+    @GetMapping("/")
+    public ResponseEntity<List<AnonymizationDto>> getAllAnonymizations(@AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        List<AnonymizationDto> anonymizationDtos = anonymizationService.getAllAnonymizations(userId).stream()
                 .map(AnonymizationDto::fromDao)
                 .toList();
         return ResponseEntity.ok(anonymizationDtos);
     }
 
     @PostMapping("/{documentId}/add")
-    public ResponseEntity<AnonymizationDto> add(@PathVariable UUID documentId,
+    public ResponseEntity<AnonymizationDto> add(
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody AnonymizationRequestBody requestBody) {
+        UUID userId = UUID.fromString(jwt.getSubject());
         Optional<AnonymizationDto> existing = anonymizationService.findByDocumentId(documentId);
 
         AnonymizationDto dto;
@@ -55,7 +61,7 @@ public class AnonymizationController {
                     existing.get().id(),
                     OffsetDateTime.now(),
                     documentId,
-                    requestBody.userId(),
+                    userId,
                     requestBody.originalText(),
                     requestBody.anonymizedText(),
                     requestBody.level(),
@@ -65,7 +71,7 @@ public class AnonymizationController {
                     null,
                     OffsetDateTime.now(),
                     documentId,
-                    requestBody.userId(),
+                    userId,
                     requestBody.originalText(),
                     requestBody.anonymizedText(),
                     requestBody.level(),

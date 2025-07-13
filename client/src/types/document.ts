@@ -1,7 +1,7 @@
 import { UUID } from "crypto";
 
 export interface Document {
-    id: UUID,
+    id: string,
     userId : UUID
     fileName: string,
     status: string

@@ -56,7 +56,6 @@ const Index = () => {
       handleFileSelect(file);
     }
   };
-
   
   const handleUpload = async () => {
     console.log('API:', import.meta.env.VITE_API_URL);
@@ -86,7 +85,6 @@ const Index = () => {
       setIsUploading(false);
     }
   };
-  
 
   const removeFile = () => {
     setSelectedFile(null);

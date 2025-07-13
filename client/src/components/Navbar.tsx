@@ -26,7 +26,7 @@ const Navbar: React.FC = () => {
   return (
     <header className="glass-panel fixed inset-x-0 top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4">
-        <Link to="/" className="text-2xl font-bold">
+        <Link to="/home" className="text-2xl font-bold">
           Redacta
         </Link>
 

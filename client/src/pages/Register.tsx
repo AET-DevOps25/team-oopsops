@@ -30,12 +30,7 @@ export default function Register() {
     e.preventDefault();
     try {
       await registerUser(form);
-
-      const token = await loginUser({
-        username: form.username,
-        password: form.password,
-      });
-      login(token);
+      login(form.username, form.password);
 
       toast.success("Registration successful! Redirecting...");
       setTimeout(() => {

@@ -1,13 +1,18 @@
-import axios from 'axios';
-import type { AnonymizationRequestBody } from '@/types/anonymize';
+import anonymizeApi from "@/api/anonymizeApi";
+import type {
+  AnonymizationRequestBody,
+  AnonymizationDto,
+} from "@/types/anonymize";
 
-const anonymizeApi = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api/v1/anonymization`,
-});
-
-export async function saveAnonymization(documentId: string,body: AnonymizationRequestBody) {
-  const response = await anonymizeApi.post(`/${documentId}/add`, body);
-  return response.data;
+export async function saveAnonymization(
+  documentId: string,
+  body: AnonymizationRequestBody
+): Promise<AnonymizationDto> {
+  const { data } = await anonymizeApi.post<AnonymizationDto>(
+    `/${documentId}/add`,
+    body
+  );
+  return data;
 }
 
 export async function downloadAnonymizedPdf(anonymizationId: string) {
@@ -23,4 +28,7 @@ export async function downloadAnonymizedPdf(anonymizationId: string) {
   link.remove();
 }
 
-
+export async function fetchAnonymizations(): Promise<AnonymizationDto[]> {
+  const { data } = await anonymizeApi.get<AnonymizationDto[]>("/");
+  return data;
+}
