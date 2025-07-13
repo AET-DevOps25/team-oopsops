@@ -1,4 +1,4 @@
-package oopsops.app.authentication;
+package oopsops.app.authentication.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +19,7 @@ public class SecurityConfig {
                     .requestMatchers(
                             "/api/v1/authentication/register",
                             "/api/v1/authentication/login",
+                            "/api/v1/authentication/refresh",
                             "/actuator/**",
                             "/swagger-ui.html",
                             "/swagger-ui/**",

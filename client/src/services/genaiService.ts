@@ -1,9 +1,4 @@
-import axios from 'axios';
-
-const genaiApi = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api/v1/genai`,
-});
-
+import genaiApi from "@/api/genaiApi";
 
 export async function anonymizeDocument(originalText: string, level: string){
   const response = await genaiApi.post("/anonymize", {

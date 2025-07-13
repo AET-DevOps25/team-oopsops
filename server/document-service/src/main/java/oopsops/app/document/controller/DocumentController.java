@@ -31,7 +31,7 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<List<DocumentDto>> getAllDocuments(@AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
         List<Document> documents = documentService.getAllByUser(userId);
