@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: {{ .Release.Namespace }}
+data:
+  01-init.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "Initializing multiple DBs..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+      CREATE DATABASE documentdb;
+      CREATE DATABASE anonymizationdb;
+      CREATE DATABASE authdb;
+    EOSQL
+    echo "Database initialization complete."

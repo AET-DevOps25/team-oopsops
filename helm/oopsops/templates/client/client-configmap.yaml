@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: client-nginx-conf
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?|ttf|otf|eot)$ {
+          expires 1y;
+          add_header Cache-Control "public";
+        }
+
+        # All other routes → index.html
+        location / {
+          try_files $uri $uri/ /index.html;
+        }
+    }

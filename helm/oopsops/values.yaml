@@ -1,111 +1,101 @@
+# Global configuration
+global:
+  storageClass: "csi-rbd-sc"
+
 openai:
   secretName: openai-secret
 
-documentService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/server/document-service
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
+# Database configuration
+postgres:
+  image: postgres:alpine
+  user: dev_user
+  password: dev_pass
+  storage: 5Gi
+
+# pgAdmin credentials
+pgadmin:
+  user:   admin@admin.com
+  password: admin
+
+# Document Service configuration
+services:
+  documentService:
+    image: ghcr.io/aet-devops25/team-oopsops/server/document-service:latest
     port: 8091
-    targetPort: 8091
-  replicaCount: 1
-  env:
-    - name: SPRING_DATASOURCE_URL
-      value: jdbc:postgresql://postgres:5432/documentdb
-    - name: SPRING_DATASOURCE_USERNAME
-      value: dev_user
-    - name: SPRING_DATASOURCE_PASSWORD
-      value: dev_pass
+    replicas: 1
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
 
-postgresql:
-  enabled: true
-  auth:
-    username: dev_user
-    password: dev_pass
-    database: documentdb  
-  initdbScripts:
-    create-multiple-dbs.sh: |
-      #!/bin/bash
-      set -e
-      echo "Creating multiple databases..."
-      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-          CREATE DATABASE documentdb;
-          CREATE DATABASE anonymizationdb;
-      EOSQL
-      echo "Databases created!"
-
-
-authenticationService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/server/authentication-service
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
+  authenticationService:
+    image: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
     port: 8092
-    targetPort: 8092
-  replicaCount: 1
-  env:
-    - name: SPRING_PROFILES_ACTIVE
-      value: dev
+    replicas: 1
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
 
-anonymizationService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.3
+    port: 8085
+    replicas: 1
+    args:
+      - start-dev
+      - --import-realm
+    env:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
+  anonymizationService:
+    image: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service:latest
     port: 8094
-    targetPort: 8094
-  replicaCount: 1
-  env:
-    - name: SPRING_DATASOURCE_URL
-      value: jdbc:postgresql://postgres:5432/anonymizationdb
-    - name: SPRING_DATASOURCE_USERNAME
-      value: dev_user
-    - name: SPRING_DATASOURCE_PASSWORD
-      value: dev_pass
+    replicas: 1
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
 
-client:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/client
-    tag: latest
-    pullPolicy: Always
-  service:
-    type: ClusterIP
-    port: 3000
-    targetPort: 80
-  replicaCount: 1
-
-genaiService:
-  image:
-    repository: ghcr.io/aet-devops25/team-oopsops/genai-service
-    tag: latest
-    pullPolicy: Always
-  service:
+  genaiService:
+    image:
+      repository: ghcr.io/aet-devops25/team-oopsops/genai-service
+      tag: latest
+      pullPolicy: Always
     type: ClusterIP
     port: 8000
     targetPort: 8000
-  env:
-    - name: ANONYMIZATION_SERVICE_URL
-      value: http://anonymization-service:8094/api/v1/anonymization
-  replicaCount: 1
+    replicaCount: 1
+    env:
+      - name: ANONYMIZATION_SERVICE_URL
+        value: http://anonymization-service:8094/api/v1/anonymization
 
+client:
+  image: ghcr.io/aet-devops25/team-oopsops/client:latest
+  port: 80
+  replicas: 1
+
+# Ingress configuration
 ingress:
   enabled: true
-  className: "nginx"
+  className: nginx
   tls: true
-  host: ""
-  secretName: "devops25-tls"
+  host: test.redactiq.student.k8s.aet.cit.tum.de
+  secretName: devops25-tls
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
-    nginx.ingress.kubernetes.io/enable-cors: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS, PUT, DELETE"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization,Content-Type"
-    nginx.ingress.kubernetes.io/cors-max-age: "1728000"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"

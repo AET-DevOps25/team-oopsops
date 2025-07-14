@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oopsops-keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.services.keycloak.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keycloak
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: keycloak
+        image: {{ .Values.services.keycloak.image }}
+        args:
+{{ toYaml .Values.services.keycloak.args | indent 10 }}
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: {{ .Values.services.keycloak.env.KEYCLOAK_ADMIN | quote }}
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: {{ .Values.services.keycloak.env.KEYCLOAK_ADMIN_PASSWORD | quote }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.services.keycloak.port }}
+        volumeMounts:
+        - name: realm-import
+          mountPath: /opt/keycloak/data/import
+      volumes:
+      - name: realm-import
+        configMap:
+          name: oopsops-keycloak-realm

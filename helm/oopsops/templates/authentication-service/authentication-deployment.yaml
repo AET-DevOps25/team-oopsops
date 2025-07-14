@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: authentication-service
+spec:
+  replicas: {{ .Values.services.authenticationService.replicas }}
+  selector:
+    matchLabels:
+      app: authentication-service
+  template:
+    metadata:
+      labels:
+        app: authentication-service
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:alpine
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do
+            echo "Waiting for postgres to be ready..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-user
+      containers:
+      - name: authentication-service
+        image: {{ .Values.services.authenticationService.image }}
+        ports:
+        - containerPort: {{ .Values.services.authenticationService.port }}
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "dev"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/authdb"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-user
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-password
+        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+          value: "update"
+        - name: SPRING_JPA_SHOW_SQL
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.services.authenticationService.port }}
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.services.authenticationService.port }}
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: {{ .Values.services.authenticationService.resources.requests.memory }}
+            cpu: {{ .Values.services.authenticationService.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.services.authenticationService.resources.limits.memory }}
+            cpu: {{ .Values.services.authenticationService.resources.limits.cpu }}
+      restartPolicy: Always

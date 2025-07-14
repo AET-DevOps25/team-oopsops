@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: authentication-service
+  ports:
+  - port: {{ .Values.services.authenticationService.port }}
+    targetPort: {{ .Values.services.authenticationService.port }}

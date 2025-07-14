@@ -4,7 +4,7 @@ metadata:
   name: genai-service
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ .Values.genaiService.replicaCount }}
+  replicas: {{ .Values.services.genaiService.replicaCount }}
   selector:
     matchLabels:
       app: genai-service
@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: genai-service
-          image: "{{ .Values.genaiService.image.repository }}:{{ .Values.genaiService.image.tag }}"
-          imagePullPolicy: {{ .Values.genaiService.image.pullPolicy }}
+          image: "{{ .Values.services.genaiService.image.repository }}:{{ .Values.services.genaiService.image.tag }}"
+          imagePullPolicy: {{ .Values.services.genaiService.image.pullPolicy }}
           resources:
             limits:
               cpu: "500m"
@@ -25,9 +25,9 @@ spec:
               cpu: "200m"
               memory: "256Mi"
           ports:
-            - containerPort: {{ .Values.genaiService.service.targetPort }}
+            - containerPort: {{ .Values.services.genaiService.targetPort }}
           env:
-            {{- range .Values.genaiService.env }}
+            {{- range .Values.services.genaiService.env }}
             - name: {{ .name }}
               value: "{{ .value }}"
             {{- end }}
