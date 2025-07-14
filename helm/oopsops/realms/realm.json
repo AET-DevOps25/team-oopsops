@@ -1,25 +1,66 @@
 {
-  "id": "oopsops",
   "realm": "oopsops",
   "enabled": true,
-  "roles": { "realm": [ { "name": "admin" }, { "name": "user" } ] },
-  "users": [ {
-      "username": "admin",
+
+  "roles": {
+    "realm": [
+      { "name": "user", "description": "Standard user" },
+      { "name": "admin", "description": "Administrator" }
+    ]
+  },
+
+  "users": [
+    {
+      "username": "testuser",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type":"password","value":"admin","temporary":false }],
-      "realmRoles":["admin"]
+      "firstName": "Test",
+      "lastName": "User",
+      "email": "test@oopsops.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "testpass",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
     }
   ],
-  "clients": [ {
-      "clientId":"oopsops-backend",
-      "enabled":true,
-      "protocol":"openid-connect",
-      "clientAuthenticatorType":"client-secret",
-      "secret":"backend-secret",
-      "publicClient":false,
-      "directAccessGrantsEnabled":true,
-      "redirectUris":["*"]
+
+  "clients": [
+    {
+      "clientId": "oopsops-client",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": ["https://test.redactiq.student.k8s.aet.cit.tum.de/*"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      }
+    },
+
+    {
+      "clientId": "oopsops-backend",
+      "enabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "clientAuthenticatorType": "client-secret",
+      "secret": "backend-secret",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true
+    },
+    {
+      "clientId": "admin-cli",
+      "enabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "clientAuthenticatorType": "client-secret",
+      "secret": "admin-secret",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true
     }
   ]
 }

@@ -50,6 +50,8 @@ services:
     realm: oopsops
     clientId: oopsops-backend
     clientSecret: backend-secret
+    adminClientId: admin-cli
+    adminClientSecret: admin-secret
     args:
       - start-dev
       - --import-realm

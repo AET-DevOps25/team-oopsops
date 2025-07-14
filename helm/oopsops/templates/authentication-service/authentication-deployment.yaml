@@ -41,7 +41,7 @@ spec:
           name: http
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "dev"
+          value: "prod"
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:postgresql://postgres:5432/authdb"
         - name: SPRING_DATASOURCE_USERNAME
@@ -59,11 +59,13 @@ spec:
           value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}"
         - name: KEYCLOAK_REALM
           value: "{{ .Values.services.keycloak.realm }}"
-        - name: KEYCLOAK_ADMIN_USERNAME
-          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN }}"
-        - name: KEYCLOAK_ADMIN_PASSWORD
-          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN_PASSWORD }}"
         - name: KEYCLOAK_CLIENT_ID
           value: "{{ .Values.services.keycloak.clientId }}"
         - name: KEYCLOAK_CLIENT_SECRET
           value: "{{ .Values.services.keycloak.clientSecret }}"
+        - name: KEYCLOAK_ADMIN_CLIENT_ID
+          value: "{{ .Values.services.keycloak.adminClientId }}"
+        - name: KEYCLOAK_ADMIN_USERNAME
+          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN }}"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN_PASSWORD }}"

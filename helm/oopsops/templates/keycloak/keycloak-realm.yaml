@@ -6,5 +6,5 @@ metadata:
     app.kubernetes.io/name: keycloak
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 data:
-  test-realm.json: |-
+  realm.json: |-
 {{ .Files.Get "realms/realm.json" | indent 4 }}
