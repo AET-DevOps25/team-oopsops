@@ -21,6 +21,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import oopsops.app.authentication.dto.RegistrationRequest;
 import oopsops.app.authentication.dto.LoginRequest;
 import oopsops.app.authentication.repository.UserRepository;
@@ -38,6 +40,9 @@ public class AuthIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
@@ -52,17 +57,15 @@ public class AuthIntegrationTest {
 
     @Test
     void register_should_createDbRecord_and_callKeycloak() throws Exception {
-        // arrange: make keycloakService.registerUser no-op
         doNothing().when(keycloakService).registerUser("alice", "a@x.com", "pwd");
 
         var req = new RegistrationRequest("alice", "a@x.com", "pwd");
         mockMvc.perform(post("/api/v1/authentication/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(req)))
+                .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("User registered successfully!"));
 
-        // verify DB state
         assertThat(userRepository.findByUsername("alice")).isPresent();
 
         // verify we did call out to KeycloakService
@@ -88,7 +91,7 @@ public class AuthIntegrationTest {
         var loginReq = new LoginRequest("bob", "secret");
         mockMvc.perform(post("/api/v1/authentication/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(loginReq)))
+                .content(objectMapper.writeValueAsString(loginReq)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.access_token").value("tok1"))
                 .andExpect(jsonPath("$.refresh_token").value("ref1"));
@@ -105,7 +108,7 @@ public class AuthIntegrationTest {
 
         mockMvc.perform(post("/api/v1/authentication/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(asJson(Map.of("refresh_token", "oldref"))))
+                .content(objectMapper.writeValueAsString(Map.of("refresh_token", "oldref"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.access_token").value("newtok"))
                 .andExpect(jsonPath("$.refresh_token").value("newref"));
@@ -113,13 +116,4 @@ public class AuthIntegrationTest {
         verify(keycloakService).refreshWithToken("oldref");
     }
 
-    // helper to JSON-serialize requests
-    private static String asJson(Object o) {
-        try {
-            return new com.fasterxml.jackson.databind.ObjectMapper()
-                    .writeValueAsString(o);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

@@ -24,8 +24,10 @@ class UserServiceTest {
 
     @Mock
     UserRepository repository;
+
     @Mock
     KeycloakService keycloakService;
+    
     @InjectMocks
     UserService userService;
 
