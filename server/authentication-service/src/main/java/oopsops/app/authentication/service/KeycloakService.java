@@ -1,5 +1,6 @@
 package oopsops.app.authentication.service;
 
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -46,9 +47,10 @@ public class KeycloakService {
         Keycloak keycloak = KeycloakBuilder.builder()
                 .serverUrl(keycloakUrl)
                 .realm("master")
+                .grantType(OAuth2Constants.PASSWORD)
+                .clientId("admin-cli")
                 .username(adminUsername)
                 .password(adminPassword)
-                .clientId("admin-cli")
                 .build();
 
         CredentialRepresentation credential = new CredentialRepresentation();
