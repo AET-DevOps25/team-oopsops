@@ -36,9 +36,10 @@ services:
     restart: unless-stopped
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/documentdb
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - DOCUMENT_DB_URL=jdbc:postgresql://postgres:5432/documentdb
+      - DOCUMENT_DB_USER=${POSTGRES_USER}
+      - DOCUMENT_DB_PASS=${POSTGRES_PASSWORD}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://keycloak.${API_HOST}/realms/oopsops
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.document-service.rule=Host(`${API_HOST}`) && PathPrefix(`/api/v1/documents`)'
@@ -51,12 +52,32 @@ services:
     restart: unless-stopped
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      - DB_URL=jdbc:postgresql://postgres:5432/authdb
+      - DB_USERNAME=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://keycloak.${API_HOST}/realms/oopsops
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.auth-service.rule=Host(`${API_HOST}`) && PathPrefix(`/api/v1/auth`)' # Assuming /api/v1/auth is your base path
       - 'traefik.http.services.auth-service.loadbalancer.server.port=8092'
       - 'traefik.http.routers.auth-service.entrypoints=websecure'
       - 'traefik.http.routers.auth-service.tls.certresolver=letsencrypt'
+
+  anonymization-service:
+    image: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service:latest
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - ANONYMIZATION_DB_URL=jdbc:postgresql://postgres:5432/anonymizationdb
+      - ANONYMIZATION_DB_USER=${POSTGRES_USER}
+      - ANONYMIZATION_DB_PASS=${POSTGRES_PASSWORD}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://keycloak.${API_HOST}/realms/oopsops
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.anonymization-service.rule=Host(`${API_HOST}`) && PathPrefix(`/api/v1/anonymization`)'
+      - 'traefik.http.services.anonymization-service.loadbalancer.server.port=8094'
+      - 'traefik.http.routers.anonymization-service.entrypoints=websecure'
+      - 'traefik.http.routers.anonymization-service.tls.certresolver=letsencrypt'
 
   genai-service:
     image: ghcr.io/aet-devops25/team-oopsops/genai-service:latest
@@ -82,6 +103,24 @@ services:
       - 'traefik.http.routers.client.entrypoints=websecure'
       - 'traefik.http.routers.client.tls.certresolver=letsencrypt'
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.3
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_HOSTNAME=keycloak.${API_HOST}
+      - KC_PROXY=edge
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.keycloak.rule=Host(`keycloak.${API_HOST}`)'
+      - 'traefik.http.services.keycloak.loadbalancer.server.port=8080'
+      - 'traefik.http.routers.keycloak.entrypoints=websecure'
+      - 'traefik.http.routers.keycloak.tls.certresolver=letsencrypt'
+
 volumes:
   postgres-data:
   letsencrypt:
+  keycloak-data:

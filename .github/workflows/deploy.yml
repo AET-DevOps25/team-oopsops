@@ -34,7 +34,7 @@ jobs:
           host: ${{ vars.EC2_PUBLIC_IP }}
           username: ${{ vars.AWS_EC2_USER }}
           key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
-          source: "./compose.aws.yml,./create-multiple-dbs.sh"
+          source: "./compose.aws.yml,./create-multiple-dbs.sh,./keycloak"
           target: /home/${{ vars.AWS_EC2_USER }}
 
       - name: Create .env file on EC2
@@ -55,7 +55,15 @@ jobs:
             echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+            echo "KEYCLOAK_ADMIN_USER=${{ secrets.KEYCLOAK_ADMIN_USER }}" >> .env
+            echo "KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}" >> .env
             echo ".env file created successfully."
+
+            echo "--- Updating Keycloak realm configuration ---"
+            CLIENT_HOST_VAR="client.${{ vars.EC2_PUBLIC_IP }}.nip.io"
+            # Use a different delimiter for sed to avoid issues with slashes in the URL
+            sed -i "s|http://localhost:3000|https://${CLIENT_HOST_VAR}|g" ./keycloak/myrealm.json
+            echo "Keycloak realm configuration updated."
 
       - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v1.0.3
