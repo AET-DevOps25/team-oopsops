@@ -6,7 +6,45 @@ on:
       - '**'
 
 jobs:
+  test-genai-service:
+    runs-on: ubuntu-latest
+    if: contains(join(github.event.commits.*.modified, ' '), 'genai-service/') || contains(join(github.event.commits.*.added, ' '), 'genai-service/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('genai-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        working-directory: ./genai-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        working-directory: ./genai-service
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANONYMIZATION_SERVICE_URL: "http://mock-service"
+        run: |
+          chmod +x run_tests.sh
+          ./run_tests.sh
+
   build-and-push:
+    needs: [test-genai-service]
+    if: always() && (needs.test-genai-service.result == 'success' || needs.test-genai-service.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
