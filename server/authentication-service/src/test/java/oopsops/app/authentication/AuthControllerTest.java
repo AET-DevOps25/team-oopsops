@@ -39,9 +39,9 @@ class AuthControllerTest {
   @Test
   void registerSuccess() throws Exception {
     var req = Map.of(
-      "username", "bob",
-      "email",    "bob@example.com",
-      "password", "pw"
+      "username", "testuser",
+      "email",    "tester@example.com",
+      "password", "testpassword"
     );
 
     mockMvc.perform(post("/api/v1/authentication/register")
@@ -51,25 +51,8 @@ class AuthControllerTest {
       .andExpect(status().isOk())
       .andExpect(content().string("User registered successfully!"));
 
-    then(userService).should().registerUser("bob", "bob@example.com", "pw");
+    then(userService).should().registerUser("testuser", "tester@example.com", "testpassword");
   }
-
-//   @Test
-//   void registerConflict() throws Exception {
-//     willThrow(new ResponseStatusException(HttpStatus.CONFLICT, "exists"))
-//       .given(userService).registerUser(any(), any(), any());
-
-//     mockMvc.perform(post("/api/v1/authentication/register")
-//         .contentType(MediaType.APPLICATION_JSON)
-//         .content(objectMapper.writeValueAsString(Map.of(
-//           "username", "x",
-//           "email",    "y",
-//           "password", "z"
-//         )))
-//       )
-//       .andExpect(status().isConflict())
-//       .andExpect(jsonPath("$.message").value("exists"));
-//   }
 
   @Test
   void loginSuccess() throws Exception {
