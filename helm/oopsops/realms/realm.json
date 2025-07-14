@@ -1,6 +1,6 @@
 {
-  "id": "test-realm",
-  "realm": "test-realm",
+  "id": "oopsops",
+  "realm": "oopsops",
   "enabled": true,
   "roles": { "realm": [ { "name": "admin" }, { "name": "user" } ] },
   "users": [ {
@@ -12,11 +12,11 @@
     }
   ],
   "clients": [ {
-      "clientId":"test-client",
+      "clientId":"oopsops-backend",
       "enabled":true,
       "protocol":"openid-connect",
       "clientAuthenticatorType":"client-secret",
-      "secret":"secret",
+      "secret":"backend-secret",
       "publicClient":false,
       "directAccessGrantsEnabled":true,
       "redirectUris":["*"]

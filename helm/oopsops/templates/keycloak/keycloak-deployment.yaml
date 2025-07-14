@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: oopsops-keycloak
+  name: keycloak
   labels:
     app.kubernetes.io/name: keycloak
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -36,4 +36,4 @@ spec:
       volumes:
       - name: realm-import
         configMap:
-          name: oopsops-keycloak-realm
+          name: keycloak-realm

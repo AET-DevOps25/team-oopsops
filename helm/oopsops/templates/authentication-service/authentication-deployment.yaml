@@ -54,31 +54,16 @@ spec:
             secretKeyRef:
               name: oopsops-secrets
               key: postgres-password
-        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-          value: "update"
-        - name: SPRING_JPA_SHOW_SQL
-          value: "true"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: {{ .Values.services.authenticationService.port }}
-          initialDelaySeconds: 90
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: {{ .Values.services.authenticationService.port }}
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        resources:
-          requests:
-            memory: {{ .Values.services.authenticationService.resources.requests.memory }}
-            cpu: {{ .Values.services.authenticationService.resources.requests.cpu }}
-          limits:
-            memory: {{ .Values.services.authenticationService.resources.limits.memory }}
-            cpu: {{ .Values.services.authenticationService.resources.limits.cpu }}
-      restartPolicy: Always
+        # ───────── Keycloak config ─────────────
+        - name: KEYCLOAK_AUTH_SERVER_URL
+          value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}"
+        - name: KEYCLOAK_REALM
+          value: "{{ .Values.services.keycloak.realm }}"
+        - name: KEYCLOAK_ADMIN_USERNAME
+          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN }}"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN_PASSWORD }}"
+        - name: KEYCLOAK_CLIENT_ID
+          value: "{{ .Values.services.keycloak.clientId }}"
+        - name: KEYCLOAK_CLIENT_SECRET
+          value: "{{ .Values.services.keycloak.clientSecret }}"

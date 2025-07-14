@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: oopsops-keycloak-realm
+  name: keycloak-realm
   labels:
     app.kubernetes.io/name: keycloak
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 data:
   test-realm.json: |-
-{{ .Files.Get "realms/test-realm.json" | indent 4 }}
+{{ .Files.Get "realms/realm.json" | indent 4 }}
