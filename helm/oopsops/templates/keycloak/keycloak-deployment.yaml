@@ -24,8 +24,8 @@ spec:
           - start-dev
           - --http-relative-path=/auth
           - --hostname-strict=false
-          - --hostname-strict-https=true
-          - --hostname-url=https://{{ .Values.ingress.host }}
+          - --hostname-strict-https=false
+          - --hostname-url=https://{{ .Values.ingress.host }}/auth
           - --import-realm
         env:
         - name: KEYCLOAK_ADMIN

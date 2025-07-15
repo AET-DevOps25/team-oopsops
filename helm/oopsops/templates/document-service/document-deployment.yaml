@@ -18,15 +18,13 @@ spec:
       initContainers:
       - name: wait-for-postgres
         image: postgres:alpine
-        command: [ "sh", "-c",
-          "until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do echo Waiting for Postgres; sleep 2; done; echo PostgreSQL is ready!" ]
+        command: ["sh","-c","until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do echo 'Waiting for Postgres...'; sleep 2; done; echo 'PostgreSQL is ready!'"]
         env:
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
               name: oopsops-secrets
               key: postgres-user
-
       containers:
       - name: document-service
         image: {{ .Values.services.documentService.image }}
@@ -49,20 +47,20 @@ spec:
               name: oopsops-secrets
               key: postgres-password
         - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
-          value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}/auth/realms/{{ .Values.services.keycloak.realm }}"
+          value: "https://{{ .Values.ingress.host }}/auth/realms/{{ .Values.services.keycloak.realm }}"
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: {{ .Values.services.documentService.port }}
-          initialDelaySeconds: 90
-          periodSeconds: 30
-          timeoutSeconds: 10
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: {{ .Values.services.documentService.port }}
-          initialDelaySeconds: 60
+          initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3

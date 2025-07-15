@@ -29,13 +29,15 @@
       "clientId": "oopsops-client",
       "enabled": true,
       "publicClient": true,
-      "redirectUris": ["http://localhost:3000/*"],
+      "redirectUris": [
+        "https://test.redactiq.student.k8s.aet.cit.tum.de/*",
+        "http://localhost:3000/*"
+      ],
       "webOrigins": ["*"],
       "protocol": "openid-connect",
-      "baseUrl": "http://localhost:3000",
+      "baseUrl": "https://test.redactiq.student.k8s.aet.cit.tum.de",
       "attributes": {
-        "post.logout.redirect.uris": "+",
-        "pkce.code.challenge.method": "S256"
+        "post.logout.redirect.uris": "+"
       }
     },
     {
