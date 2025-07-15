@@ -38,7 +38,7 @@ public class AnonymizationController {
         this.anonymizationService = anonymizationService;
     }
 
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<List<AnonymizationDto>> getAllAnonymizations(@AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
         List<AnonymizationDto> anonymizationDtos = anonymizationService.getAllAnonymizations(userId).stream()

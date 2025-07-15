@@ -49,7 +49,7 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DocumentDto> getDocumentById(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID docId) {
+    public ResponseEntity<DocumentDto> getDocumentById(@AuthenticationPrincipal Jwt jwt, @PathVariable("id") UUID docId) {
         UUID userId = UUID.fromString(jwt.getSubject());
         Document document = documentService.getByUserAndId(userId, docId)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found"));
@@ -68,7 +68,7 @@ public class DocumentController {
 
     @PostMapping("/upload")
     public ResponseEntity<DocumentDto> upload(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) {
 
         if (file == null || file.isEmpty()) {
