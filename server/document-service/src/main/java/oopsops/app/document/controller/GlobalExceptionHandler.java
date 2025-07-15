@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body("File size exceeds limit!");
     }
 
-    @ExceptionHandler({PdfParsingException.class, StorageException.class})
+    @ExceptionHandler({ PdfParsingException.class, StorageException.class })
     public ResponseEntity<String> handleStorageOrParsing(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }

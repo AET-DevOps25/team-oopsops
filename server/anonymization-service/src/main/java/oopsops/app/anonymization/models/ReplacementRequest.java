@@ -5,7 +5,7 @@ import java.util.List;
 public class ReplacementRequest {
 
     private String originalText;
-    private List<ChangedTerm> replacements;
+    private List<ChangedTerm> changedTerms;
 
     public String getOriginalText() {
         return originalText;
@@ -16,10 +16,10 @@ public class ReplacementRequest {
     }
 
     public List<ChangedTerm> getChangedTerms() {
-        return replacements;
+        return changedTerms;
     }
 
-    public void setChangedTerms(final List<ChangedTerm> replacements) {
-        this.replacements = replacements;
+    public void setChangedTerms(final List<ChangedTerm> changedTerms) {
+        this.changedTerms = changedTerms;
     }
 }

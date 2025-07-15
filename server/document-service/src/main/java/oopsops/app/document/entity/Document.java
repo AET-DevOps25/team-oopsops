@@ -3,8 +3,6 @@ package oopsops.app.document.entity;
 import java.time.Instant;
 import java.util.UUID;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
@@ -20,7 +18,6 @@ public class Document {
 
     @Id
     @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(columnDefinition = "UUID")
     private UUID id;
 
@@ -33,7 +30,6 @@ public class Document {
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
 
-    // TODO: Replace String with DocumentStatus enum when implemented
     @Column(name = "status")
     private String status;
 
