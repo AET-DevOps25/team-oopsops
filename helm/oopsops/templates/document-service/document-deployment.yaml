@@ -18,21 +18,15 @@ spec:
       initContainers:
       - name: wait-for-postgres
         image: postgres:alpine
-        command:
-        - sh
-        - -c
-        - |
-          until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do
-            echo "Waiting for postgres to be ready..."
-            sleep 2
-          done
-          echo "PostgreSQL is ready!"
+        command: [ "sh", "-c",
+          "until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do echo Waiting for Postgres; sleep 2; done; echo PostgreSQL is ready!" ]
         env:
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
               name: oopsops-secrets
               key: postgres-user
+
       containers:
       - name: document-service
         image: {{ .Values.services.documentService.image }}
@@ -41,7 +35,7 @@ spec:
           name: http
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "dev"
+          value: "prod"
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:postgresql://postgres:5432/documentdb"
         - name: SPRING_DATASOURCE_USERNAME
@@ -54,10 +48,8 @@ spec:
             secretKeyRef:
               name: oopsops-secrets
               key: postgres-password
-        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-          value: "update"
-        - name: SPRING_JPA_SHOW_SQL
-          value: "true"
+        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}/auth/realms/{{ .Values.services.keycloak.realm }}"
         livenessProbe:
           httpGet:
             path: /actuator/health
