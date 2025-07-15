@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.nio.file.*;
 
 @Service
-@Profile({"dev","test"})
+@Profile({"dev","test", "prod"})
 public class FileSystemStorageService implements StorageService {
 
     private final Path rootLocation;
