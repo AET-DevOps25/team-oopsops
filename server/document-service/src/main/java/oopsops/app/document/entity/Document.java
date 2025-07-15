@@ -27,7 +27,7 @@ public class Document {
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "file_url", nullable = false)
+    @Column(name = "file_url", nullable = true)
     private String fileUrl;
 
     @Column(name = "status")
