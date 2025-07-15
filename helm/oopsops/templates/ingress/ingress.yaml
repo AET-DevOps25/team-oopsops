@@ -34,7 +34,7 @@ spec:
               name: authentication-service
               port: { number: {{ .Values.services.authenticationService.port }} }
         # Keycloak
-        - path: /realms
+        - path: /auth/admin
           pathType: Prefix
           backend:
             service:
