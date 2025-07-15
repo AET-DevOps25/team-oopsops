@@ -48,7 +48,7 @@ spec:
               name: oopsops-secrets
               key: postgres-password
         - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
-          value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}/auth/realms/{{ .Values.services.keycloak.realm }}"
+          value: "https://{{ .Values.ingress.host }}/auth/realms/{{ .Values.services.keycloak.realm }}"
         livenessProbe:
           httpGet:
             path: /actuator/health
