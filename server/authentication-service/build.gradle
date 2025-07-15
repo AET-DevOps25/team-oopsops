@@ -19,6 +19,8 @@ dependencies {
 
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.keycloak:keycloak-admin-client:22.0.3'
+    //Prometheus dependencies
+	implementation 'io.micrometer:micrometer-registry-prometheus:1.9.1'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
