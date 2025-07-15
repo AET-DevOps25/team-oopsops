@@ -21,7 +21,12 @@ spec:
       - name: keycloak
         image: {{ .Values.services.keycloak.image }}
         args:
-{{ toYaml .Values.services.keycloak.args | indent 10 }}
+          - start-dev
+          - --http-relative-path=/auth
+          - --hostname-strict=false
+          - --hostname-strict-https=true
+          - --hostname-url=https://{{ .Values.ingress.host }}
+          - --import-realm
         env:
         - name: KEYCLOAK_ADMIN
           value: {{ .Values.services.keycloak.env.KEYCLOAK_ADMIN | quote }}
@@ -30,6 +35,20 @@ spec:
         ports:
         - name: http
           containerPort: {{ .Values.services.keycloak.port }}
+        readinessProbe:
+          httpGet:
+            path: /auth/realms/{{ .Values.services.keycloak.realm }}/.well-known/openid-configuration
+            port: {{ .Values.services.keycloak.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /auth/realms/{{ .Values.services.keycloak.realm }}/.well-known/openid-configuration
+            port: {{ .Values.services.keycloak.port }}
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 3
         volumeMounts:
         - name: realm-import
           mountPath: /opt/keycloak/data/import

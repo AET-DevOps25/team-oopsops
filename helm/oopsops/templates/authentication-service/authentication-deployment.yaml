@@ -16,6 +16,17 @@ spec:
         app: authentication-service
     spec:
       initContainers:
+      - name: wait-for-keycloak
+        image: busybox:1.35.0
+        command:
+          - sh
+          - -c
+          - |
+            until wget -qO- http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}/auth/realms/{{ .Values.services.keycloak.realm }}/.well-known/openid-configuration; do
+              echo "Waiting for Keycloak to be ready..."
+              sleep 5
+            done
+            echo "✅ Keycloak is ready."
       - name: wait-for-postgres
         image: postgres:alpine
         command:
@@ -54,9 +65,8 @@ spec:
             secretKeyRef:
               name: oopsops-secrets
               key: postgres-password
-        # ───────── Keycloak config ─────────────
         - name: KEYCLOAK_AUTH_SERVER_URL
-          value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}"
+          value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}/auth"
         - name: KEYCLOAK_REALM
           value: "{{ .Values.services.keycloak.realm }}"
         - name: KEYCLOAK_CLIENT_ID
@@ -69,3 +79,4 @@ spec:
           value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN }}"
         - name: KEYCLOAK_ADMIN_PASSWORD
           value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN_PASSWORD }}"
+      restartPolicy: Always

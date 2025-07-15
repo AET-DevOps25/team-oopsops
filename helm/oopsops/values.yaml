@@ -52,9 +52,6 @@ services:
     clientSecret: backend-secret
     adminClientId: admin-cli
     adminClientSecret: admin-secret
-    args:
-      - start-dev
-      - --import-realm
     env:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin

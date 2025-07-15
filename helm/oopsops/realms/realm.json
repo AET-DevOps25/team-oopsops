@@ -11,56 +11,43 @@
 
   "users": [
     {
-      "username": "testuser",
+      "username": "service-account-oopsops-backend",
       "enabled": true,
-      "emailVerified": true,
-      "firstName": "Test",
-      "lastName": "User",
-      "email": "test@oopsops.com",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "testpass",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["user"]
+      "serviceAccountClientId": "oopsops-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "manage-clients",
+          "view-users",
+          "view-clients"
+        ]
+      }
     }
   ],
-
   "clients": [
     {
       "clientId": "oopsops-client",
       "enabled": true,
       "publicClient": true,
-      "redirectUris": ["https://test.redactiq.student.k8s.aet.cit.tum.de/*"],
+      "redirectUris": ["http://localhost:3000/*"],
       "webOrigins": ["*"],
       "protocol": "openid-connect",
+      "baseUrl": "http://localhost:3000",
       "attributes": {
-        "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "+"
+        "post.logout.redirect.uris": "+",
+        "pkce.code.challenge.method": "S256"
       }
     },
-
     {
       "clientId": "oopsops-backend",
       "enabled": true,
-      "publicClient": false,
-      "protocol": "openid-connect",
       "clientAuthenticatorType": "client-secret",
       "secret": "backend-secret",
       "serviceAccountsEnabled": true,
-      "directAccessGrantsEnabled": true
-    },
-    {
-      "clientId": "admin-cli",
-      "enabled": true,
+      "directAccessGrantsEnabled": true,
       "publicClient": false,
-      "protocol": "openid-connect",
-      "clientAuthenticatorType": "client-secret",
-      "secret": "admin-secret",
-      "serviceAccountsEnabled": true,
-      "directAccessGrantsEnabled": true
+      "standardFlowEnabled": true,
+      "fullScopeAllowed": true
     }
   ]
 }
