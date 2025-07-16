@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.services.keycloak.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keycloak
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: keycloak
+        image: {{ .Values.services.keycloak.image }}
+        args:
+          - start-dev
+          - --http-relative-path=/auth
+          - --hostname-strict=false
+          - --hostname-strict-https=false
+          - --hostname-url=https://{{ .Values.ingress.host }}/auth
+          - --import-realm
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: {{ .Values.services.keycloak.env.KEYCLOAK_ADMIN | quote }}
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: {{ .Values.services.keycloak.env.KEYCLOAK_ADMIN_PASSWORD | quote }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.services.keycloak.port }}
+        readinessProbe:
+          httpGet:
+            path: /auth/realms/{{ .Values.services.keycloak.realm }}/.well-known/openid-configuration
+            port: {{ .Values.services.keycloak.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /auth/realms/{{ .Values.services.keycloak.realm }}/.well-known/openid-configuration
+            port: {{ .Values.services.keycloak.port }}
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 3
+        volumeMounts:
+        - name: realm-import
+          mountPath: /opt/keycloak/data/import
+      volumes:
+      - name: realm-import
+        configMap:
+          name: keycloak-realm

@@ -49,14 +49,13 @@
     {
       "clientId": "oopsops-backend",
       "enabled": true,
+      "clientAuthenticatorType": "client-secret",
       "secret": "backend-secret",
-      "publicClient": false,
       "serviceAccountsEnabled": true,
       "directAccessGrantsEnabled": true,
-      "protocol": "openid-connect",
-      "redirectUris": [],
+      "publicClient": false,
       "standardFlowEnabled": true,
-      "clientAuthenticatorType": "client-secret"
+      "fullScopeAllowed": true
     }
   ]
 }

@@ -1,5 +1,4 @@
 services:
-
   api-gateway:
     image: nginx:alpine
     volumes:
@@ -72,6 +71,9 @@ services:
 
   authentication-service:
     image: ghcr.io/aet-devops25/team-oopsops/server/authentication-service:latest
+    depends_on:
+      keycloak:
+        condition: service_healthy
     build:
       context: ./server
       dockerfile: authentication-service/Dockerfile
@@ -88,16 +90,16 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-  
+
   genai-service:
     image: ghcr.io/aet-devops25/team-oopsops/genai-service:latest
     build:
       context: ./genai-service
-      dockerfile: Dockerfile  
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}  
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANONYMIZATION_SERVICE_URL=http://anonymization-service:8094/api/v1/anonymization
 
     healthcheck:
@@ -118,20 +120,19 @@ services:
     ports:
       - "3000:80"
     restart: unless-stopped
-    
 
   pgadmin:
     image: dpage/pgadmin4:7
     container_name: pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL:  admin@admin.com
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
     depends_on:
       - postgres
     volumes:
-      - pgadmin-data:/var/lib/pgadmin 
+      - pgadmin-data:/var/lib/pgadmin
 
   keycloak:
     image: quay.io/keycloak/keycloak:22.0.3
@@ -141,6 +142,11 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:8080/realms/oopsops/.well-known/openid-configuration"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "8085:8080"
     restart: unless-stopped

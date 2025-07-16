@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS document (
   id          UUID            PRIMARY KEY,
   user_id     UUID            NOT NULL,
   file_name   TEXT            NOT NULL,
-  file_url    TEXT            NOT NULL,
+  file_url    TEXT,
   status      TEXT            NOT NULL DEFAULT 'UPLOADED',
   upload_date TIMESTAMPTZ     NOT NULL DEFAULT now()
 );

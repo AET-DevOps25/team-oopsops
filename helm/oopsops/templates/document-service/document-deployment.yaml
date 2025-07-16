@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: document-service
+spec:
+  replicas: {{ .Values.services.documentService.replicas }}
+  selector:
+    matchLabels:
+      app: document-service
+  template:
+    metadata:
+      labels:
+        app: document-service
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:alpine
+        command: ["sh","-c","until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do echo 'Waiting for Postgres...'; sleep 2; done; echo 'PostgreSQL is ready!'"]
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-user
+      containers:
+      - name: document-service
+        image: {{ .Values.services.documentService.image }}
+        ports:
+        - containerPort: {{ .Values.services.documentService.port }}
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/documentdb"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-user
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-password
+        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: "https://{{ .Values.ingress.host }}/auth/realms/{{ .Values.services.keycloak.realm }}"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.services.documentService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.services.documentService.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: {{ .Values.services.documentService.resources.requests.memory }}
+            cpu: {{ .Values.services.documentService.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.services.documentService.resources.limits.memory }}
+            cpu: {{ .Values.services.documentService.resources.limits.cpu }}
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+      volumes:
+      - name: uploads
+        emptyDir: {}
+      restartPolicy: Always
