@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: authentication-service
+spec:
+  replicas: {{ .Values.services.authenticationService.replicas }}
+  selector:
+    matchLabels:
+      app: authentication-service
+  template:
+    metadata:
+      labels:
+        app: authentication-service
+    spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: busybox:1.35.0
+        command:
+          - sh
+          - -c
+          - |
+            until wget -qO- http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}/auth/realms/{{ .Values.services.keycloak.realm }}/.well-known/openid-configuration; do
+              echo "Waiting for Keycloak to be ready..."
+              sleep 5
+            done
+            echo "✅ Keycloak is ready."
+      - name: wait-for-postgres
+        image: postgres:alpine
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do
+            echo "Waiting for postgres to be ready..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-user
+      containers:
+      - name: authentication-service
+        image: {{ .Values.services.authenticationService.image }}
+        ports:
+        - containerPort: {{ .Values.services.authenticationService.port }}
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/authdb"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-user
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oopsops-secrets
+              key: postgres-password
+        - name: KEYCLOAK_AUTH_SERVER_URL
+          value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.services.keycloak.port }}/auth"
+        - name: KEYCLOAK_REALM
+          value: "{{ .Values.services.keycloak.realm }}"
+        - name: KEYCLOAK_CLIENT_ID
+          value: "{{ .Values.services.keycloak.clientId }}"
+        - name: KEYCLOAK_CLIENT_SECRET
+          value: "{{ .Values.services.keycloak.clientSecret }}"
+        - name: KEYCLOAK_ADMIN_CLIENT_ID
+          value: "{{ .Values.services.keycloak.adminClientId }}"
+        - name: KEYCLOAK_ADMIN_USERNAME
+          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN }}"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: "{{ .Values.services.keycloak.env.KEYCLOAK_ADMIN_PASSWORD }}"
+      restartPolicy: Always

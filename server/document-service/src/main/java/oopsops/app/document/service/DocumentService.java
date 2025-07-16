@@ -7,9 +7,12 @@ import org.springframework.web.multipart.MultipartFile;
 import oopsops.app.document.repository.DocumentRepository;
 import oopsops.app.document.entity.Document;
 import oopsops.app.document.exception.InvalidFileTypeException;
+import oopsops.app.document.exception.PdfParsingException;
 import oopsops.app.document.entity.DocumentText;
 
 import java.util.Optional;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -55,14 +58,22 @@ public class DocumentService {
         doc.setStatus("UPLOADED");
         doc = documentRepository.save(doc);
 
-        Path localPath = Path.of(URI.create(fileUrl));
-        String text = pdfParsingService.extractText(localPath);
+        String text;
+        if (fileUrl != null && fileUrl.startsWith("file:")) {
+            Path localPath = Path.of(URI.create(fileUrl));
+            text = pdfParsingService.extractText(localPath);
+        } else {
+            try (InputStream in = file.getInputStream()) {
+                text = pdfParsingService.extractText(in);
+            } catch (IOException e) {
+                throw new PdfParsingException("Failed to read upload stream", e);
+            }
+        }
 
-        DocumentText documentText = new DocumentText();
-        documentText.setDocument(doc);
-        documentText.setText(text);
-        doc.setDocumentText(documentText);
-
+        DocumentText dto = new DocumentText();
+        dto.setDocument(doc);
+        dto.setText(text);
+        doc.setDocumentText(dto);
         doc.setStatus("PROCESSED");
 
         return documentRepository.save(doc);

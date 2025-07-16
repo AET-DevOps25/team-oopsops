@@ -1,0 +1,55 @@
+{
+  "realm": "oopsops",
+  "enabled": true,
+
+  "roles": {
+    "realm": [
+      { "name": "user", "description": "Standard user" },
+      { "name": "admin", "description": "Administrator" }
+    ]
+  },
+
+  "users": [
+    {
+      "username": "service-account-oopsops-backend",
+      "enabled": true,
+      "serviceAccountClientId": "oopsops-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "manage-clients",
+          "view-users",
+          "view-clients"
+        ]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "oopsops-client",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "https://test.redactiq.student.k8s.aet.cit.tum.de/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect",
+      "baseUrl": "https://test.redactiq.student.k8s.aet.cit.tum.de",
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      }
+    },
+    {
+      "clientId": "oopsops-backend",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "backend-secret",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "fullScopeAllowed": true
+    }
+  ]
+}
