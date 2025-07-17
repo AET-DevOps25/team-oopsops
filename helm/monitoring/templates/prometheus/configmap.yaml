@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: {{ .Values.prometheus.scrapeConfig.globalInterval }}
+      evaluation_interval: {{ .Values.prometheus.scrapeConfig.evaluationInterval }}
+
+    {{- if .Values.alerting.enabled }}
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+    {{- end }}
+    
+    scrape_configs:
+      {{- if .Values.prometheus.scrapeConfig.jobs.prometheus.enabled }}
+      - job_name: 'prometheus'
+        metrics_path: {{ .Values.prometheus.scrapeConfig.jobs.prometheus.metricsPath }}
+        static_configs:
+          - targets: ['localhost:9090']
+      {{- end }}
+      
+      {{- if .Values.prometheus.scrapeConfig.jobs.documentService.enabled }}
+      - job_name: 'document-service'
+        metrics_path: '{{ .Values.prometheus.scrapeConfig.jobs.documentService.metricsPath }}'
+        static_configs:
+          - targets: ['document-service.{{ .Values.targetApp.namespace }}.svc.cluster.local:{{ .Values.targetApp.services.documentService.port }}']
+      {{- end }}
+      
+      {{- if .Values.prometheus.scrapeConfig.jobs.anonymizationService.enabled }}
+      - job_name: 'anonymization-service'
+        metrics_path: '{{ .Values.prometheus.scrapeConfig.jobs.anonymizationService.metricsPath }}'
+        static_configs:
+          - targets: ['anonymization-service.{{ .Values.targetApp.namespace }}.svc.cluster.local:{{ .Values.targetApp.services.anonymizationService.port }}']
+      {{- end }}
+      
+      {{- if .Values.prometheus.scrapeConfig.jobs.authenticationService.enabled }}
+      - job_name: 'authentication-service'
+        metrics_path: '{{ .Values.prometheus.scrapeConfig.jobs.authenticationService.metricsPath }}'
+        static_configs:
+          - targets: ['authentication-service.{{ .Values.targetApp.namespace }}.svc.cluster.local:{{ .Values.targetApp.services.authenticationService.port }}']
+      {{- end }}
+      
+      {{- if .Values.prometheus.scrapeConfig.jobs.genaiService.enabled }}
+      - job_name: 'genai-service'
+        metrics_path: '{{ .Values.prometheus.scrapeConfig.jobs.genaiService.metricsPath }}'
+        static_configs:
+          - targets: ['genai-service.{{ .Values.targetApp.namespace }}.svc.cluster.local:{{ .Values.targetApp.services.genaiService.port }}']
+      {{- end }}
+
+      {{- if .Values.prometheus.scrapeConfig.jobs.nodeExporter.enabled }}
+      - job_name: 'node-exporter'
+        static_configs:
+          - targets: ['node-exporter:9100']
+      {{- end }}

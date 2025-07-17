@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-files
+  namespace: oopsops-monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: dashboard-files
+data:
+  sample-dashboard.json: |
+{{ .Files.Get "dashboards/sample-dashboard.json" | indent 4 }}

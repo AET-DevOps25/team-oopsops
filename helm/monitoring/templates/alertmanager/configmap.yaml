@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      receiver: 'default-receiver'
+
+    receivers:
+      - name: 'default-receiver'
+        email_configs:
+          - to: 'yosr.nablitum@.de'
+            from: 'alertmanager@yourdomain.com'
+            smarthost: 'smtp.yourdomain.com:587'
+            auth_username: 'yosr.nablitum@.de'
+            auth_password: 'adamin'
+            auth_identity: 'yosr.nablitum@.de'
+            require_tls: true

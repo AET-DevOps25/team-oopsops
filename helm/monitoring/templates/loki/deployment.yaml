@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: loki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+      - name: loki
+        image: {{ .Values.loki.image }}
+        ports:
+        - containerPort: 3100
+          name: http
+        - containerPort: 9096
+          name: grpc
+        args:
+        - -config.file=/etc/loki/loki.yaml
+        resources:
+          requests:
+            memory: {{ .Values.loki.resources.requests.memory }}
+            cpu: {{ .Values.loki.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.loki.resources.limits.memory }}
+            cpu: {{ .Values.loki.resources.limits.cpu }}
+        volumeMounts:
+        - name: loki-config
+          mountPath: /etc/loki
+        - name: loki-storage
+          mountPath: /loki
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 45
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 60
+          periodSeconds: 30
+      volumes:
+      - name: loki-config
+        configMap:
+          name: loki-config
+      - name: loki-storage
+        persistentVolumeClaim:
+          claimName: loki-pvc
