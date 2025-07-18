@@ -79,11 +79,33 @@ jobs:
             docker --version
             docker compose version
 
+            echo "--- Checking disk space before cleanup ---"
+            df -h
+
             echo "--- Logging into Docker registry (GHCR) ---"
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "--- Stopping any running services to avoid conflicts ---"
             docker compose -f compose.aws.yml down || echo "No running containers to stop. Continuing."
+
+            echo "--- Cleaning up Docker resources to free space ---"
+            # Remove all stopped containers
+            docker container prune -f || echo "No containers to prune"
+            
+            # Remove all unused images (not just dangling ones)
+            docker image prune -a -f || echo "No images to prune"
+            
+            # Remove all unused volumes (be careful with data!)
+            docker volume prune -f || echo "No volumes to prune"
+            
+            # Remove all unused networks
+            docker network prune -f || echo "No networks to prune"
+            
+            # Remove build cache
+            docker builder prune -f || echo "No build cache to prune"
+
+            echo "--- Checking disk space after cleanup ---"
+            df -h
 
             echo "--- Starting Docker Compose services ---"
             docker compose -f compose.aws.yml --env-file .env up --pull always -d
