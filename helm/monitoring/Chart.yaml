@@ -1,4 +1,3 @@
-
 apiVersion: v2
 name: oopsops-monitoring-app
 description: A Helm chart for OopsOps Monitoring Stack (Prometheus & Grafana)
@@ -10,8 +9,6 @@ keywords:
   - monitoring
   - prometheus
   - grafana
-  - loki
-  - promtail
 
 maintainers:
   - name: OopsOps Team

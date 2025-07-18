@@ -34,6 +34,13 @@ prometheus:
   scrapeConfig:
     globalInterval: 15s
     evaluationInterval: 15s
+    kubernetes:
+      enabled: true
+      nodeMetrics: true
+      podMetrics: true
+      serviceMetrics: true
+      kubeletMetrics: true
+      cadvisorMetrics: true
     
     # Job configurations
     jobs:
@@ -82,28 +89,6 @@ grafana:
       enabled: true
     alerting:
       enabled: true
-
-loki:
-  image: grafana/loki:2.9.0
-  storage: 10Gi
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "250m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
-
-# Promtail configuration
-promtail:
-  image: grafana/promtail:2.9.0
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "256Mi"
-      cpu: "200m"
 
 # Alerting configuration
 alerting:

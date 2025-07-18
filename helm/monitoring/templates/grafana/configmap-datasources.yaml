@@ -16,16 +16,6 @@ data:
         url: http://prometheus:9090
         isDefault: true
 
-  loki.yaml: |
-    apiVersion: 1
-    datasources:
-      - name: Loki
-        type: loki
-        access: proxy
-        url: http://loki:3100
-        isDefault: false
-        jsonData:
-          maxLines: 1000
 
   alertmanager.yaml: |
     apiVersion: 1
