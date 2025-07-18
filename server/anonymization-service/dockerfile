@@ -8,5 +8,5 @@ RUN gradle :anonymization-service:bootJar --no-daemon
 FROM gcr.io/distroless/java21-debian12
 WORKDIR /app
 COPY --from=build /app/anonymization-service/build/libs/*.jar app.jar
-EXPOSE 8093
+EXPOSE 8094
 ENTRYPOINT ["java", "-jar", "app.jar"]

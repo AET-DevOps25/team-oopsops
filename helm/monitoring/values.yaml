@@ -13,7 +13,7 @@ targetApp:
     authenticationService:
       port: 8092
     anonymizationService:
-      port: 8093
+      port: 8094
     genaiService:
       port: 8000
 

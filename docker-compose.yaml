@@ -55,14 +55,14 @@ services:
       context: ./server
       dockerfile: anonymization-service/Dockerfile
     ports:
-      - "8093:8093"
+      - "8094:8094"
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/anonymizationdb
       - SPRING_DATASOURCE_USERNAME=dev_user
       - SPRING_DATASOURCE_PASSWORD=dev_pass
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8093/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8094/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -100,7 +100,7 @@ services:
       - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANONYMIZATION_SERVICE_URL=http://anonymization-service:8093/api/v1/anonymization
+      - ANONYMIZATION_SERVICE_URL=http://anonymization-service:8094/api/v1/anonymization
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
