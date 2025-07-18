@@ -38,6 +38,4 @@ jobs:
       - name: Deploy using Helm
         run: |
           helm upgrade --install oopsops-app ./helm/oopsops \
-            --namespace oops-ops \
-            --set image.tag=${{ github.sha }} \
-            --wait
+            --namespace oops-ops
