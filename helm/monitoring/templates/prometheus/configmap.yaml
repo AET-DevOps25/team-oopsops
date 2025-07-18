@@ -52,6 +52,28 @@ data:
             target_label: service
           - source_labels: [__meta_kubernetes_namespace]
             target_label: namespace
+      - job_name: 'kubernetes-genai-service'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - oopsops-test
+        relabel_configs:
+          # Only keep genai-service
+          - source_labels: [__meta_kubernetes_service_name]
+            action: keep
+            regex: 'genai-service'
+          
+          # Set the correct metrics path for FastAPI
+          - source_labels: []
+            target_label: __metrics_path__
+            replacement: /metrics
+          
+          # Add useful labels
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: service
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
 
 # apiVersion: v1
 # kind: ConfigMap

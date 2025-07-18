@@ -14,6 +14,7 @@ spec:
           - document-service
           - authentication-service
           - anonymization-service
+          - genai-service
   namespaceSelector:
     matchNames:
       - oopsops-test
@@ -26,4 +27,7 @@ spec:
       interval: 15s
     - targetPort: 8093  # For anonymization-service
       path: /actuator/prometheus
+      interval: 15s
+    - targetPort: 8000  # For genai-service
+      path: /metrics
       interval: 15s
