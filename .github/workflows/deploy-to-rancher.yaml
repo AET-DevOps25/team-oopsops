@@ -1,4 +1,4 @@
-name: Deploy to Rancher
+name: Deploy to Rancher Cluster
 
 on:
   push:
@@ -35,6 +35,13 @@ jobs:
       - name: Ensure namespace exists
         run: kubectl get ns oops-ops || kubectl create ns oops-ops
 
+      - name: Create OpenAI API key secret
+        run: |
+          kubectl create secret generic openai-secret \
+            --namespace oops-ops \
+            --from-literal=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+      
       - name: Deploy using Helm
         run: |
           helm upgrade --install oopsops-app ./helm/oopsops \
