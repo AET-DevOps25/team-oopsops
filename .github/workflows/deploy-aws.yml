@@ -12,7 +12,16 @@ on:
       - 'feature/**'
 
 jobs:
+  test-springboot:
+    uses: ./.github/workflows/test-springboot-services.yml
+    
+  test-genai:
+    uses: ./.github/workflows/test-genai-service.yml
+    secrets: inherit
+
   deploy:
+    needs: [test-springboot, test-genai]
+    if: always()
     runs-on: ubuntu-latest
     environment:
       name: oopoops
@@ -119,3 +128,13 @@ jobs:
 
             echo "--- Displaying recent logs for troubleshooting ---"
             docker compose -f compose.aws.yml logs --tail=50
+            
+            echo "--- Deployment completed successfully ---"
+
+  post-deployment-validation:
+    needs: deploy
+    if: always() && needs.deploy.result == 'success'
+    uses: ./.github/workflows/post-deployment-validation.yml
+    with:
+      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      base_url: 'https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io'

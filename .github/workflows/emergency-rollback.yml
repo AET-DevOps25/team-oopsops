@@ -1,0 +1,197 @@
+# ABOUTME: This workflow provides emergency rollback capabilities for deployments gone wrong
+# ABOUTME: It can quickly revert to a previous stable version across different environments
+
+name: Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      target_commit:
+        description: 'Commit SHA to rollback to (leave empty for previous version)'
+        required: false
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+jobs:
+  validate-rollback:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate rollback target
+        run: |
+          echo "## Rollback Validation" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Requested by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Determine target commit
+          if [ -n "${{ inputs.target_commit }}" ]; then
+            target_commit="${{ inputs.target_commit }}"
+            echo "**Target commit:** $target_commit (specified)" >> $GITHUB_STEP_SUMMARY
+          else
+            # Get the previous successful deployment commit
+            target_commit=$(git rev-parse HEAD~1)
+            echo "**Target commit:** $target_commit (previous)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Validate commit exists
+          if git cat-file -e "$target_commit"; then
+            echo "✅ Target commit is valid" >> $GITHUB_STEP_SUMMARY
+            echo "TARGET_COMMIT=$target_commit" >> $GITHUB_ENV
+          else
+            echo "❌ Target commit is invalid" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Check rollback safety
+        run: |
+          echo "## Safety Checks" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if target commit is not too old
+          commit_age=$(git log --format="%ci" -n 1 $TARGET_COMMIT)
+          echo "**Target commit date:** $commit_age" >> $GITHUB_STEP_SUMMARY
+          
+          # Warn if rolling back to very old version
+          days_old=$(( ($(date +%s) - $(date -d "$commit_age" +%s)) / 86400 ))
+          if [ $days_old -gt 7 ]; then
+            echo "⚠️ Warning: Rolling back to commit older than 7 days" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Rollback target is recent" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  rollback-aws:
+    needs: validate-rollback
+    if: inputs.environment == 'production' || inputs.environment == 'staging'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout target commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_COMMIT }}
+
+      - name: Create rollback notification
+        run: |
+          echo "🚨 **EMERGENCY ROLLBACK IN PROGRESS** 🚨" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Rolling back ${{ inputs.environment }} to commit: ${{ env.TARGET_COMMIT }}" >> $GITHUB_STEP_SUMMARY
+          echo "Reason: ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy previous version to AWS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_PUBLIC_IP }}
+          username: ${{ vars.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          script: |
+            set -e
+            
+            echo "=== EMERGENCY ROLLBACK INITIATED ==="
+            echo "Timestamp: $(date)"
+            echo "Target commit: ${{ env.TARGET_COMMIT }}"
+            echo "Reason: ${{ inputs.reason }}"
+            
+            # Stop current services
+            echo "Stopping current services..."
+            docker compose -f compose.aws.yml down || true
+            
+            # Pull previous images (assuming they're tagged with commit SHA)
+            echo "Pulling previous Docker images..."
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/client:${{ env.TARGET_COMMIT }} || \
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/client:latest
+            
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/document-service:${{ env.TARGET_COMMIT }} || \
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/document-service:latest
+            
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/authentication-service:${{ env.TARGET_COMMIT }} || \
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/authentication-service:latest
+            
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/anonymization-service:${{ env.TARGET_COMMIT }} || \
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/anonymization-service:latest
+            
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/genai-service:${{ env.TARGET_COMMIT }} || \
+            docker pull ghcr.io/${{ github.repository_owner }}/team-oopsops/genai-service:latest
+            
+            # Start services with previous version
+            echo "Starting services with previous version..."
+            docker compose -f compose.aws.yml up -d
+            
+            # Wait for services to stabilize
+            sleep 30
+            
+            echo "=== ROLLBACK COMPLETED ==="
+            docker compose -f compose.aws.yml ps
+
+  post-rollback-validation:
+    needs: rollback-aws
+    if: always() && needs.rollback-aws.result == 'success'
+    uses: ./.github/workflows/post-deployment-validation.yml
+    with:
+      environment: ${{ inputs.environment }}
+      base_url: 'https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io'
+
+  rollback-notification:
+    needs: [validate-rollback, rollback-aws, post-rollback-validation]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Generate rollback report
+        run: |
+          echo "# Emergency Rollback Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Commit:** ${{ env.TARGET_COMMIT }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Initiated by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Completed at:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check rollback status
+          rollback_status="${{ needs.rollback-aws.result }}"
+          validation_status="${{ needs.post-rollback-validation.result }}"
+          
+          if [ "$rollback_status" = "success" ]; then
+            echo "✅ **Rollback completed successfully**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Rollback failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "$validation_status" = "success" ]; then
+            echo "✅ **Post-rollback validation passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Post-rollback validation had issues**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Send emergency notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          status="${{ needs.rollback-aws.result }}"
+          if [ "$status" = "success" ]; then
+            message="🚨 EMERGENCY ROLLBACK COMPLETED 🚨\n\nEnvironment: ${{ inputs.environment }}\nStatus: ✅ Success\nReason: ${{ inputs.reason }}\nInitiated by: ${{ github.actor }}"
+          else
+            message="🚨 EMERGENCY ROLLBACK FAILED 🚨\n\nEnvironment: ${{ inputs.environment }}\nStatus: ❌ Failed\nReason: ${{ inputs.reason }}\nInitiated by: ${{ github.actor }}\n\n⚠️ MANUAL INTERVENTION REQUIRED"
+          fi
+          
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$message\"}" \
+            $SLACK_WEBHOOK_URL || echo "Emergency notification failed"

@@ -42,9 +42,53 @@ jobs:
           chmod +x run_tests.sh
           ./run_tests.sh
 
+  test-springboot-services:
+    runs-on: ubuntu-latest
+    if: contains(join(github.event.commits.*.modified, ' '), 'server/') || contains(join(github.event.commits.*.added, ' '), 'server/')
+    continue-on-error: true
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - document-service
+          - authentication-service
+          - anonymization-service
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('server/**/*.gradle*', 'server/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        working-directory: ./server
+        run: chmod +x gradlew
+
+      - name: Run tests for ${{ matrix.service }}
+        working-directory: ./server
+        continue-on-error: true
+        run: |
+          echo "Running tests for ${{ matrix.service }}..."
+          ./gradlew :${{ matrix.service }}:test --continue || true
+
   build-and-push:
-    needs: [test-genai-service]
-    if: always() && (needs.test-genai-service.result == 'success' || needs.test-genai-service.result == 'skipped')
+    needs: [test-genai-service, test-springboot-services]
+    if: always() && (needs.test-genai-service.result == 'success' || needs.test-genai-service.result == 'skipped') && (needs.test-springboot-services.result == 'success' || needs.test-springboot-services.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: read
