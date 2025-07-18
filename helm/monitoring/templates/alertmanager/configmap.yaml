@@ -14,10 +14,10 @@ data:
     receivers:
       - name: 'default-receiver'
         email_configs:
-          - to: 'yosr.nablitum@.de'
-            from: 'alertmanager@yourdomain.com'
-            smarthost: 'smtp.yourdomain.com:587'
-            auth_username: 'yosr.nablitum@.de'
-            auth_password: 'adamin'
-            auth_identity: 'yosr.nablitum@.de'
+          - to: 'yosr.nabli@tum.de'
+            from: 'alertmanager@redacta.com'
+            smarthost: 'smtp.gmail.com:587'
+            auth_username: '{{ .Values.alertmanager.email.username }}'
+            auth_password: {{ (lookup "v1" "Secret" "oopsops-monitoring" "alertmanager-secret").data.email-auth-password | b64dec | quote }}
+            auth_identity: '{{ .Values.alertmanager.email.username }}'
             require_tls: true

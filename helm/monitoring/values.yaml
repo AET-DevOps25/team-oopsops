@@ -96,12 +96,8 @@ alerting:
   rules:
     highErrorRate:
       enabled: true
-      threshold: 0.1
-      duration: 5m
-    podRestartCount:
-      enabled: true
       threshold: 5
-      duration: 1m
+      duration: 5m
     slowResponseTime:
       enabled: true
       threshold: 0.5
@@ -110,10 +106,9 @@ alerting:
       enabled: true
       threshold: 0.8
       duration: 5m
-    highCpuUsage:
-      enabled: true
-      threshold: 80
-      duration: 5m
+alertmanager:
+  email:
+    username: yosr.nabli99@gmail.com
 # Ingress configuration for monitoring tools
 ingress:
   enabled: true

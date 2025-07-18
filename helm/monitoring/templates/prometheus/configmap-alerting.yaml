@@ -4,35 +4,6 @@ metadata:
   name: prometheus-alerting-rules
   namespace: {{ .Values.global.namespace }}
 data:
-  pod-alerts.yml: |
-    groups:
-      - name: pod-monitoring
-        rules:
-          - alert: PodHighCPUUsage
-            expr: sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (pod) / sum(kube_pod_container_resource_limits{namespace="{{ .Values.targetApp.namespace }}", resource="cpu"}) by (pod) * 100 > 80
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "High CPU usage in pod {{`{{ $labels.pod }}`}}"
-              description: "Pod CPU usage is above 80% of its limit for the last 5 minutes with current value: {{`{{ $value }}`}}%"
-          
-          - alert: PodHighMemoryUsage
-            expr: sum(container_memory_working_set_bytes{namespace="{{ .Values.targetApp.namespace }}"}) by (pod) / sum(kube_pod_container_resource_limits{namespace="{{ .Values.targetApp.namespace }}", resource="memory"}) by (pod) * 100 > 80
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "High memory usage in pod {{`{{ $labels.pod }}`}}"
-              description: "Pod memory usage is above 80% of its limit for the last 5 minutes with current value: {{`{{ $value }}`}}%"
-              
-          - alert: FrequentPodRestarts
-            expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Values.targetApp.namespace }}"}[1h]) > 3
-            labels:
-              severity: warning
-            annotations:
-              summary: "Frequent restarts of pod {{`{{ $labels.pod }}`}}"
-              description: "Pod has restarted {{`{{ $value }}`}} times in the last hour"
 
   spring-alerts.yml: |
     groups:
@@ -48,7 +19,7 @@ data:
               description: "Error rate is above {{ .Values.alerting.rules.highErrorRate.threshold | default 5 }}% for the last {{ .Values.alerting.rules.highErrorRate.duration | default "5m" }} with current value: {{`{{ $value }}`}}%"
               
           - alert: SlowResponseTime
-            expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service, uri, le)) > {{ .Values.alerting.rules.slowResponseTime.threshold | default 0.5 }}
+            expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_max{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service, uri, le)) > {{ .Values.alerting.rules.slowResponseTime.threshold | default 0.5 }}
             for: {{ .Values.alerting.rules.slowResponseTime.duration | default "5m" }}
             labels:
               severity: warning
