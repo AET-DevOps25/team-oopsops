@@ -1,88 +1,29 @@
----
-# ServiceMonitor for Document Service
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: document-service-monitor
-  namespace: {{ .Values.global.namespace }}
+  name: spring-services-monitor
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: document-service
-    monitoring: "true"
+    release: {{ .Release.Name }}
 spec:
   selector:
-    matchLabels:
-      app: document-service
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - document-service
+          - authentication-service
+          - anonymization-service
   namespaceSelector:
     matchNames:
-      - {{ .Values.targetApp.namespace }}
+      - oopsops-test
   endpoints:
-    - port: {{ .Values.targetApp.services.documentService.port | quote }}
+    - targetPort: 8091  # For document-service
       path: /actuator/prometheus
-      interval: 30s
-      scrapeTimeout: 10s
----
-# ServiceMonitor for Authentication Service
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: authentication-service-monitor
-  namespace: {{ .Values.global.namespace }}
-  labels:
-    app: authentication-service
-    monitoring: "true"
-spec:
-  selector:
-    matchLabels:
-      app: authentication-service
-  namespaceSelector:
-    matchNames:
-      - {{ .Values.targetApp.namespace }}
-  endpoints:
-    - port: {{ .Values.targetApp.services.authenticationService.port | quote }}
+      interval: 15s
+    - targetPort: 8092  # For authentication-service
       path: /actuator/prometheus
-      interval: 30s
-      scrapeTimeout: 10s
----
-# ServiceMonitor for Anonymization Service
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: anonymization-service-monitor
-  namespace: {{ .Values.global.namespace }}
-  labels:
-    app: anonymization-service
-    monitoring: "true"
-spec:
-  selector:
-    matchLabels:
-      app: anonymization-service
-  namespaceSelector:
-    matchNames:
-      - {{ .Values.targetApp.namespace }}
-  endpoints:
-    - port: {{ .Values.targetApp.services.anonymizationService.port | quote }}
+      interval: 15s
+    - targetPort: 8094  # For anonymization-service
       path: /actuator/prometheus
-      interval: 30s
-      scrapeTimeout: 10s
----
-# ServiceMonitor for GenAI Service
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: genai-service-monitor
-  namespace: {{ .Values.global.namespace }}
-  labels:
-    app: genai-service
-    monitoring: "true"
-spec:
-  selector:
-    matchLabels:
-      app: genai-service
-  namespaceSelector:
-    matchNames:
-      - {{ .Values.targetApp.namespace }}
-  endpoints:
-    - port: {{ .Values.targetApp.services.genaiService.port  | quote }}
-      path: /metrics
-      interval: 30s
-      scrapeTimeout: 10s
+      interval: 15s

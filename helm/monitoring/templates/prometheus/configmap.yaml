@@ -29,18 +29,82 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
-      - job_name: 'spring-actuator'
-        metrics_path: '/actuator/prometheus'
+      # For ServiceMonitor discovery
+      - job_name: 'kubernetes-service-monitors'
         kubernetes_sd_configs:
-          - role: pod
+          - role: endpoints
+            namespaces:
+              names:
+                - oopsops-test
         relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_label_app]
-            regex: '(authentication-service|document-service|anonymization-service)'
+          # Only keep endpoints where service has a servicemonitor
+          - source_labels: [__meta_kubernetes_service_name]
             action: keep
-          - source_labels: [__meta_kubernetes_pod_name]
-            target_label: pod
-          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: '(document-service|authentication-service|anonymization-service)'
+          
+          # Set the correct metrics path
+          - source_labels: []
+            target_label: __metrics_path__
+            replacement: /actuator/prometheus
+          
+          # Add useful labels
+          - source_labels: [__meta_kubernetes_service_name]
             target_label: service
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
 
-      # All other services will be discovered automatically via ServiceMonitors
-      # No manual configuration needed - Rancher's Prometheus Operator handles it
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: prometheus-config
+#   namespace: {{ .Values.global.namespace }}
+#   labels:
+#     app: prometheus
+# data:
+#   prometheus.yml: |
+#     global:
+#       scrape_interval: {{ .Values.prometheus.scrapeConfig.globalInterval }}
+#       evaluation_interval: {{ .Values.prometheus.scrapeConfig.evaluationInterval }}
+
+#     {{- if .Values.alerting.enabled }}
+#     rule_files:
+#       - "/etc/prometheus/rules/*.yml"
+
+#     alerting:
+#       alertmanagers:
+#         - static_configs:
+#             - targets:
+#               - alertmanager:9093
+#     {{- end }}
+
+#     scrape_configs:
+#       # Prometheus self-monitoring
+#       - job_name: 'prometheus'
+#         metrics_path: /metrics
+#         static_configs:
+#           - targets: ['localhost:9090']
+          
+#       # This job discovers ServiceMonitors in both namespaces
+#       - job_name: 'kubernetes-service-monitors'
+#         kubernetes_sd_configs:
+#           - role: endpoints
+#             namespaces:
+#               names:
+#                 - oopsops-monitoring
+#                 - oopsops-test
+#         relabel_configs:
+#           # Keep only endpoints selected by ServiceMonitors
+#           - source_labels: [__meta_kubernetes_endpoints_name]
+#             regex: .*
+#             action: keep
+#           # Set the scrape path to the path specified in the ServiceMonitor
+#           - source_labels: [__meta_kubernetes_endpoint_path]
+#             regex: (.+)
+#             target_label: __metrics_path__
+#             replacement: $1
+#           # Set service name as label
+#           - source_labels: [__meta_kubernetes_service_name]
+#             target_label: service
+#           # Set namespace as label
+#           - source_labels: [__meta_kubernetes_namespace]
+#             target_label: namespace
