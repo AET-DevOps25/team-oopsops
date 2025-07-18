@@ -33,11 +33,11 @@ jobs:
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
       - name: Ensure namespace exists
-        run: kubectl get ns oopsops || kubectl create ns oopsops
+        run: kubectl get ns oops-ops || kubectl create ns oops-ops
 
       - name: Deploy using Helm
         run: |
           helm upgrade --install oopsops-app ./helm/oopsops \
-            --namespace oopsops \
+            --namespace oops-ops \
             --set image.tag=${{ github.sha }} \
             --wait
