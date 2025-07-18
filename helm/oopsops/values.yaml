@@ -58,7 +58,7 @@ services:
 
   anonymizationService:
     image: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service:latest
-    port: 8094
+    port: 8093
     replicas: 1
     resources:
       requests:
@@ -79,7 +79,7 @@ services:
     replicaCount: 1
     env:
       - name: ANONYMIZATION_SERVICE_URL
-        value: http://anonymization-service:8094/api/v1/anonymization
+        value: http://anonymization-service:8093/api/v1/anonymization
 
 client:
   image: ghcr.io/aet-devops25/team-oopsops/client:latest

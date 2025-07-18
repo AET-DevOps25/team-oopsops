@@ -24,6 +24,6 @@ spec:
     - targetPort: 8092  # For authentication-service
       path: /actuator/prometheus
       interval: 15s
-    - targetPort: 8094  # For anonymization-service
+    - targetPort: 8093  # For anonymization-service
       path: /actuator/prometheus
       interval: 15s
