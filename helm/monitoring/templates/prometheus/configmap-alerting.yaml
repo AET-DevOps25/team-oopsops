@@ -4,23 +4,60 @@ metadata:
   name: prometheus-alerting-rules
   namespace: {{ .Values.global.namespace }}
 data:
-  system-alerts.yml: |
+  pod-alerts.yml: |
     groups:
-      - name: system
+      - name: pod-monitoring
         rules:
-          - alert: HighCPUUsage
-            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
-            for: 10m
+          - alert: PodHighCPUUsage
+            expr: sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (pod) / sum(kube_pod_container_resource_limits{namespace="{{ .Values.targetApp.namespace }}", resource="cpu"}) by (pod) * 100 > 80
+            for: 5m
             labels:
               severity: warning
             annotations:
-              summary: "High CPU usage on {{`{{ $labels.instance }}`}}"
-              description: "CPU usage is above 80% for the last 10min with current value: {{`{{ $value }}`}}%"
-          - alert: HighMemoryUsage
-            expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
-            for: 15m
+              summary: "High CPU usage in pod {{`{{ $labels.pod }}`}}"
+              description: "Pod CPU usage is above 80% of its limit for the last 5 minutes with current value: {{`{{ $value }}`}}%"
+          
+          - alert: PodHighMemoryUsage
+            expr: sum(container_memory_working_set_bytes{namespace="{{ .Values.targetApp.namespace }}"}) by (pod) / sum(kube_pod_container_resource_limits{namespace="{{ .Values.targetApp.namespace }}", resource="memory"}) by (pod) * 100 > 80
+            for: 5m
             labels:
               severity: warning
             annotations:
-              summary: "High memory usage on {{`{{ $labels.instance }}`}}"
-              description: "Memory usage is above 85% for last 15 minutes with current value: {{`{{ $value }}`}}%"
+              summary: "High memory usage in pod {{`{{ $labels.pod }}`}}"
+              description: "Pod memory usage is above 80% of its limit for the last 5 minutes with current value: {{`{{ $value }}`}}%"
+              
+          - alert: FrequentPodRestarts
+            expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Values.targetApp.namespace }}"}[1h]) > 3
+            labels:
+              severity: warning
+            annotations:
+              summary: "Frequent restarts of pod {{`{{ $labels.pod }}`}}"
+              description: "Pod has restarted {{`{{ $value }}`}} times in the last hour"
+
+  spring-alerts.yml: |
+    groups:
+      - name: spring-application
+        rules:
+          - alert: HighErrorRate
+            expr: sum(rate(http_server_requests_seconds_count{status=~"5..", namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service) / sum(rate(http_server_requests_seconds_count{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service) * 100 > {{ .Values.alerting.rules.highErrorRate.threshold | default 5 }}
+            for: {{ .Values.alerting.rules.highErrorRate.duration | default "5m" }}
+            labels:
+              severity: warning
+            annotations:
+              summary: "High error rate on {{`{{ $labels.service }}`}}"
+              description: "Error rate is above {{ .Values.alerting.rules.highErrorRate.threshold | default 5 }}% for the last {{ .Values.alerting.rules.highErrorRate.duration | default "5m" }} with current value: {{`{{ $value }}`}}%"
+              
+          - alert: SlowResponseTime
+            expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service, uri, le)) > {{ .Values.alerting.rules.slowResponseTime.threshold | default 0.5 }}
+            for: {{ .Values.alerting.rules.slowResponseTime.duration | default "5m" }}
+            labels:
+              severity: warning
+            annotations:
+              summary: "Slow response time on {{`{{ $labels.service }}`}} - {{`{{ $labels.uri }}`}}"
+              description: "95th percentile response time is above {{ .Values.alerting.rules.slowResponseTime.threshold | default 0.5 }}s for the last {{ .Values.alerting.rules.slowResponseTime.duration | default "5m" }} with current value: {{`{{ $value }}`}}s"
+              
+          - alert: HighJvmMemoryUsage
+            expr: sum(jvm_memory_used_bytes{area="heap", namespace="{{ .Values.targetApp.namespace }}"}) by (service) / sum(jvm_memory_max_bytes{area="heap", namespace="{{ .Values.targetApp.namespace }}"}) by (service) * 100 > 85
+            for: 5m
+            labels:
+              severity: warning

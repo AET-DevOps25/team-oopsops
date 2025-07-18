@@ -29,5 +29,18 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
+      - job_name: 'spring-actuator'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: '(authentication-service|document-service|anonymization-service)'
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: service
+
       # All other services will be discovered automatically via ServiceMonitors
       # No manual configuration needed - Rancher's Prometheus Operator handles it
