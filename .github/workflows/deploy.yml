@@ -4,10 +4,11 @@ on:
   # Allows to manually run this workflow from the Actions tab
   # You can select which branch to run it on from the UI.
   workflow_dispatch:
-  # Also triggers the workflow on pushes to branches matching 'feature/**'
-  # This is useful for automatically testing deployment changes on feature branches.
+  # Triggers the workflow on pushes to main branch and feature branches
+  # Main branch for production deployments, feature branches for testing
   push:
     branches:
+      - 'main'
       - 'feature/**'
 
 jobs:
