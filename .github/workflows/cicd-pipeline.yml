@@ -1,0 +1,148 @@
+# ABOUTME: Main CI/CD orchestrator workflow that coordinates testing, building, and deployments across environments
+# ABOUTME: This workflow manages the complete pipeline flow while maintaining separation of concerns with deployment workflows
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  # === CONTINUOUS INTEGRATION PHASE ===
+  test-springboot:
+    name: Test SpringBoot Services
+    uses: ./.github/workflows/test-springboot-services.yml
+
+  test-genai:
+    name: Test GenAI Service  
+    uses: ./.github/workflows/test-genai-service.yml
+    secrets: inherit
+
+  build-and-push:
+    name: Build & Push Docker Images
+    needs: [test-springboot, test-genai]
+    if: always() && (needs.test-springboot.result == 'success' || needs.test-springboot.result == 'skipped') && (needs.test-genai.result == 'success' || needs.test-genai.result == 'skipped')
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+
+  # === CONTINUOUS DEPLOYMENT PHASE ===
+  deploy-aws:
+    name: Deploy to AWS
+    needs: [build-and-push]
+    if: always() && (needs.build-and-push.result == 'success' || github.event_name == 'workflow_dispatch')
+    uses: ./.github/workflows/deploy-aws.yml
+    secrets: inherit
+
+  deploy-rancher:
+    name: Deploy to Rancher
+    needs: [build-and-push]
+    if: always() && (needs.build-and-push.result == 'success' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/feature/'))
+    uses: ./.github/workflows/deploy-to-rancher.yaml
+    secrets: inherit
+
+  # === POST-DEPLOYMENT VALIDATION PHASE ===
+  validate-aws-deployment:
+    name: Validate AWS Deployment
+    needs: [deploy-aws]
+    if: always() && needs.deploy-aws.result == 'success'
+    uses: ./.github/workflows/post-deployment-validation.yml
+    with:
+      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      base_url: 'https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io'
+
+  validate-rancher-deployment:
+    name: Validate Rancher Deployment
+    needs: [deploy-rancher]
+    if: always() && needs.deploy-rancher.result == 'success'
+    uses: ./.github/workflows/post-deployment-validation.yml
+    with:
+      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      base_url: 'https://redactiq.student.k8s.aet.cit.tum.de'
+
+  # === PIPELINE STATUS REPORTING ===
+  pipeline-summary:
+    name: Pipeline Summary
+    needs: [test-springboot, test-genai, build-and-push, deploy-aws, deploy-rancher, validate-aws-deployment, validate-rancher-deployment]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Generate Pipeline Summary
+        run: |
+          echo "# CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Pipeline Run:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Stage Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # CI Phase
+          springboot_status="${{ needs.test-springboot.result }}"
+          genai_status="${{ needs.test-genai.result }}"
+          build_status="${{ needs.build-and-push.result }}"
+          
+          # CD Phase
+          aws_status="${{ needs.deploy-aws.result }}"
+          rancher_status="${{ needs.deploy-rancher.result }}"
+          
+          # Validation Phase
+          aws_validation="${{ needs.validate-aws-deployment.result }}"
+          rancher_validation="${{ needs.validate-rancher-deployment.result }}"
+          
+          # Format results
+          format_status() {
+            case "$1" in
+              "success") echo "✅ Success" ;;
+              "failure") echo "❌ Failed" ;;
+              "skipped") echo "⏭️ Skipped" ;;
+              "cancelled") echo "🚫 Cancelled" ;;
+              *) echo "⏳ $1" ;;
+            esac
+          }
+          
+          echo "| SpringBoot Tests | $(format_status "$springboot_status") |" >> $GITHUB_STEP_SUMMARY
+          echo "| GenAI Tests | $(format_status "$genai_status") |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build & Push | $(format_status "$build_status") |" >> $GITHUB_STEP_SUMMARY
+          echo "| AWS Deployment | $(format_status "$aws_status") |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rancher Deployment | $(format_status "$rancher_status") |" >> $GITHUB_STEP_SUMMARY
+          echo "| AWS Validation | $(format_status "$aws_validation") |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rancher Validation | $(format_status "$rancher_validation") |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall Pipeline Status:** " >> $GITHUB_STEP_SUMMARY
+          
+          # Determine overall status
+          if [[ "$build_status" == "success" && ("$aws_status" == "success" || "$rancher_status" == "success") ]]; then
+            echo "✅ **SUCCESS** - At least one deployment succeeded" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$build_status" == "success" ]]; then
+            echo "⚠️ **PARTIAL** - Build succeeded but deployments failed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **FAILED** - Build phase failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Set deployment URLs in summary
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment URLs" >> $GITHUB_STEP_SUMMARY
+          
+          aws_status="${{ needs.deploy-aws.result }}"
+          rancher_status="${{ needs.deploy-rancher.result }}"
+          
+          if [[ "$aws_status" == "success" ]]; then
+            echo "- **AWS:** https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "$rancher_status" == "success" ]]; then
+            echo "- **Rancher:** https://redactiq.student.k8s.aet.cit.tum.de" >> $GITHUB_STEP_SUMMARY
+          fi

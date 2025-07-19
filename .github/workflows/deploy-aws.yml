@@ -1,0 +1,234 @@
+# ABOUTME: AWS deployment workflow that handles only the deployment to EC2 instances via Docker Compose
+# ABOUTME: This workflow expects Docker images to already be built and available in the container registry
+
+name: Deploy to AWS
+
+on:
+  workflow_call:
+    secrets:
+      AWS_EC2_PRIVATE_KEY:
+        required: true
+      POSTGRES_USER:
+        required: true
+      POSTGRES_PASSWORD:
+        required: true
+      OPENAI_API_KEY:
+        required: true
+      KEYCLOAK_ADMIN_USER:
+        required: true
+      KEYCLOAK_ADMIN_PASSWORD:
+        required: true
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: oopoops
+      url: 'https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Debug Environment Variables
+        run: |
+          echo "EC2_PUBLIC_IP: ${{ vars.EC2_PUBLIC_IP }}"
+          echo "AWS_EC2_USER: ${{ vars.AWS_EC2_USER }}"
+          echo "SSH Key length: ${#AWS_EC2_PRIVATE_KEY}"
+        env:
+          AWS_EC2_PRIVATE_KEY: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+
+      - name: Test Network Connectivity
+        id: connectivity_test
+        run: |
+          echo "=== Network Connectivity Tests ==="
+          connectivity_failed=false
+          
+          echo "Testing ping to EC2 instance..."
+          if ! ping -c 3 ${{ vars.EC2_PUBLIC_IP }}; then
+            echo "❌ Ping failed"
+            connectivity_failed=true
+          else
+            echo "✅ Ping successful"
+          fi
+          
+          echo "Testing port 22 connectivity..."
+          if ! timeout 10 telnet ${{ vars.EC2_PUBLIC_IP }} 22; then
+            echo "❌ Port 22 not accessible"
+            connectivity_failed=true
+          else
+            echo "✅ Port 22 accessible"
+          fi
+          
+          echo "Testing with nmap..."
+          if ! nmap -p 22 ${{ vars.EC2_PUBLIC_IP }}; then
+            echo "❌ nmap failed"
+            connectivity_failed=true
+          else
+            echo "✅ nmap successful"
+          fi
+          
+          echo "Getting GitHub runner IP..."
+          curl -s https://httpbin.org/ip || echo "Failed to get runner IP"
+          
+          if [ "$connectivity_failed" = true ]; then
+            echo "CONNECTIVITY_FAILED=true" >> $GITHUB_ENV
+            echo "::warning::Network connectivity tests failed - deployment will proceed with timeout"
+          else
+            echo "CONNECTIVITY_FAILED=false" >> $GITHUB_ENV
+          fi
+          
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa ${{ vars.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts || echo "SSH keyscan failed"
+
+      - name: Test SSH Connection
+        id: ssh_test
+        run: |
+          ssh_failed=false
+          if ! ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }} "echo 'SSH connection successful'; uptime; docker --version"; then
+            echo "❌ SSH test failed"
+            ssh_failed=true
+            echo "SSH_FAILED=true" >> $GITHUB_ENV
+          else
+            echo "✅ SSH connection successful"
+            echo "SSH_FAILED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Copy Docker Compose File to EC2 (Enhanced)
+        id: copy_files
+        uses: appleboy/scp-action@v0.1.7
+        timeout-minutes: 8
+        continue-on-error: true
+        with:
+          host: ${{ vars.EC2_PUBLIC_IP }}
+          username: ${{ vars.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          source: "./compose.aws.yml,./create-multiple-dbs.sh,./keycloak"
+          target: /home/${{ vars.AWS_EC2_USER }}
+          timeout: 60s
+          command_timeout: 120s
+          debug: true
+          overwrite: true
+
+      - name: Check deployment prerequisites
+        id: deployment_check
+        run: |
+          if [ "${{ steps.copy_files.outcome }}" = "failure" ] || [ "$CONNECTIVITY_FAILED" = "true" ] || [ "$SSH_FAILED" = "true" ]; then
+            echo "SKIP_DEPLOYMENT=true" >> $GITHUB_ENV
+            echo "::warning::AWS deployment will be skipped due to connectivity issues"
+            echo "## ⚠️ AWS Deployment Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "**Reason:** Network connectivity or file copy failed" >> $GITHUB_STEP_SUMMARY
+            echo "- Connectivity test: ${{ env.CONNECTIVITY_FAILED == 'true' && '❌ Failed' || '✅ Passed' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- SSH test: ${{ env.SSH_FAILED == 'true' && '❌ Failed' || '✅ Passed' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- File copy: ${{ steps.copy_files.outcome == 'failure' && '❌ Failed' || '✅ Passed' }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "SKIP_DEPLOYMENT=false" >> $GITHUB_ENV
+          fi
+
+      - name: Fallback - Manual File Copy
+        if: failure() && env.SKIP_DEPLOYMENT != 'true'
+        continue-on-error: true
+        run: |
+          echo "Primary SCP failed, trying manual copy..."
+          
+          scp -o ConnectTimeout=60 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa \
+            ./compose.aws.yml ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }}:/home/${{ vars.AWS_EC2_USER }}/
+          
+          scp -o ConnectTimeout=60 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa \
+            ./create-multiple-dbs.sh ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }}:/home/${{ vars.AWS_EC2_USER }}/
+          
+          scp -r -o ConnectTimeout=60 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa \
+            ./keycloak ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }}:/home/${{ vars.AWS_EC2_USER }}/
+
+      - name: Create .env file on EC2
+        if: env.SKIP_DEPLOYMENT != 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_PUBLIC_IP }}
+          username: ${{ vars.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          timeout: 60s
+          command_timeout: 120s
+          script: |
+            set -e
+            echo "--- Creating .env file ---"
+            > .env
+            echo "CLIENT_HOST=client.${{ vars.EC2_PUBLIC_IP }}.nip.io" >> .env
+            echo "API_HOST=api.${{ vars.EC2_PUBLIC_IP }}.nip.io" >> .env
+            echo "PUBLIC_API_URL=https://api.${{ vars.EC2_PUBLIC_IP }}.nip.io/docs" >> .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+            echo "KEYCLOAK_ADMIN_USER=${{ secrets.KEYCLOAK_ADMIN_USER }}" >> .env
+            echo "KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}" >> .env
+            echo ".env file created successfully."
+
+            echo "--- Updating Keycloak realm configuration ---"
+            CLIENT_HOST_VAR="client.${{ vars.EC2_PUBLIC_IP }}.nip.io"
+            sed -i "s|http://localhost:3000|https://${CLIENT_HOST_VAR}|g" ./keycloak/myrealm.json
+            echo "Keycloak realm configuration updated."
+
+      - name: Deploy with Docker Compose
+        if: env.SKIP_DEPLOYMENT != 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_PUBLIC_IP }}
+          username: ${{ vars.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          timeout: 300s
+          command_timeout: 600s
+          script: |
+            set -ex
+            
+            echo "--- Verifying Docker installation ---"
+            docker --version
+            docker compose version
+
+            echo "--- Checking disk space before cleanup ---"
+            df -h
+
+            echo "--- Logging into Docker registry (GHCR) ---"
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "--- Stopping any running services to avoid conflicts ---"
+            docker compose -f compose.aws.yml down || echo "No running containers to stop. Continuing."
+
+            echo "--- Cleaning up Docker resources to free space ---"
+            docker container prune -f || echo "No containers to prune"
+            docker image prune -a -f || echo "No images to prune"
+            docker volume prune -f || echo "No volumes to prune"
+            docker network prune -f || echo "No networks to prune"
+            docker builder prune -f || echo "No build cache to prune"
+
+            echo "--- Checking disk space after cleanup ---"
+            df -h
+
+            echo "--- Starting Docker Compose services ---"
+            docker compose -f compose.aws.yml --env-file .env up --pull always -d
+
+            echo "--- Deployment initiated. Waiting 15 seconds for services to stabilize... ---"
+            sleep 15
+
+            echo "--- Checking status of running containers ---"
+            docker compose -f compose.aws.yml ps
+
+            echo "--- Displaying recent logs for troubleshooting ---"
+            docker compose -f compose.aws.yml logs --tail=50
+            
+            echo "--- AWS Deployment completed successfully ---"
+
+      - name: Deployment Status Summary
+        if: always()
+        run: |
+          echo "## AWS Deployment Status" >> $GITHUB_STEP_SUMMARY
+          if [ "$SKIP_DEPLOYMENT" = "true" ]; then
+            echo "⚠️ **Deployment Skipped** - Network connectivity issues" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ **Deployment Completed Successfully**" >> $GITHUB_STEP_SUMMARY
+          fi

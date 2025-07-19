@@ -30,13 +30,13 @@ class TestAnonymizationEndpoint:
     ):
         """Test successful anonymization."""
         response = test_client.post(
-            "/anonymize", json=sample_anonymize_request
+            "/api/v1/genai/anonymize", json=sample_anonymize_request
         )
 
         assert response.status_code == 200
         result = response.json()
-        assert "reponseText" in result
-        assert "Anonymized text" in result["reponseText"]
+        assert "responseText" in result
+        assert "Anonymized text" in result["responseText"]
 
         # Verify the graph was called
         mock_anonymizer_graph.invoke.assert_called_once()
@@ -59,11 +59,13 @@ class TestAnonymizationEndpoint:
             "level": level,
         }
 
-        response = test_client.post("/anonymize", json=request_data)
+        response = test_client.post(
+            "/api/v1/genai/anonymize", json=request_data
+        )
 
         assert response.status_code == 200
         result = response.json()
-        assert "reponseText" in result
+        assert "responseText" in result
 
         # Verify the graph was called with correct level
         args, kwargs = mock_anonymizer_graph.invoke.call_args
@@ -84,11 +86,13 @@ class TestAnonymizationEndpoint:
                 "level": scenario["expected_level"],
             }
 
-            response = test_client.post("/anonymize", json=request_data)
+            response = test_client.post(
+                "/api/v1/genai/anonymize", json=request_data
+            )
 
             assert response.status_code == 200
             result = response.json()
-            assert "reponseText" in result
+            assert "responseText" in result
 
     @pytest.mark.integration
     def test_anonymize_edge_cases(
@@ -105,7 +109,9 @@ class TestAnonymizationEndpoint:
                 "level": "medium",
             }
 
-            response = test_client.post("/anonymize", json=request_data)
+            response = test_client.post(
+                "/api/v1/genai/anonymize", json=request_data
+            )
 
             if edge_case["name"] == "empty_document":
                 # Should handle empty text gracefully
@@ -118,7 +124,9 @@ class TestAnonymizationEndpoint:
         """Test anonymization with invalid level."""
         request_data = {"originalText": "Some text", "level": "invalid_level"}
 
-        response = test_client.post("/anonymize", json=request_data)
+        response = test_client.post(
+            "/api/v1/genai/anonymize", json=request_data
+        )
         assert response.status_code == 422
 
     @pytest.mark.integration
@@ -126,7 +134,9 @@ class TestAnonymizationEndpoint:
         """Test anonymization with missing required fields."""
         request_data = {"level": "medium"}  # Missing originalText
 
-        response = test_client.post("/anonymize", json=request_data)
+        response = test_client.post(
+            "/api/v1/genai/anonymize", json=request_data
+        )
         assert response.status_code == 422
 
     @pytest.mark.integration
@@ -138,7 +148,7 @@ class TestAnonymizationEndpoint:
             mock_service.side_effect = RuntimeError("Service unavailable")
 
             response = test_client.post(
-                "/anonymize", json=sample_anonymize_request
+                "/api/v1/genai/anonymize", json=sample_anonymize_request
             )
             assert response.status_code == 503
             assert "Service unavailable" in response.json()["detail"]
@@ -153,13 +163,13 @@ class TestSummarizationEndpoint:
     ):
         """Test successful summarization."""
         response = test_client.post(
-            "/summarize", json=sample_summarize_request
+            "/api/v1/genai/summarize", json=sample_summarize_request
         )
 
         assert response.status_code == 200
         result = response.json()
-        assert "reponseText" in result
-        assert "personal information" in result["reponseText"]
+        assert "responseText" in result
+        assert "personal information" in result["responseText"]
 
         # Verify the graph was called
         mock_summarizer_graph.invoke.assert_called_once()
@@ -175,11 +185,11 @@ class TestSummarizationEndpoint:
             "level": level,
         }
 
-        response = test_client.post("/summarize", json=request_data)
+        response = test_client.post("/api/v1/genai/summarize", json=request_data)
 
         assert response.status_code == 200
         result = response.json()
-        assert "reponseText" in result
+        assert "responseText" in result
 
         # Verify the graph was called with correct level
         args, kwargs = mock_summarizer_graph.invoke.call_args
@@ -190,7 +200,7 @@ class TestSummarizationEndpoint:
         """Test summarization with invalid level."""
         request_data = {"originalText": "Some text", "level": "invalid_level"}
 
-        response = test_client.post("/summarize", json=request_data)
+        response = test_client.post("/api/v1/genai/summarize", json=request_data)
         assert response.status_code == 422
 
 
@@ -208,7 +218,7 @@ class TestChatEndpoint:
             )
             mock_llm.invoke.return_value = mock_response
 
-            response = test_client.post("/chat", json=sample_chat_request)
+            response = test_client.post("/api/v1/genai/chat", json=sample_chat_request)
 
             assert response.status_code == 200
             result = response.json()
@@ -236,7 +246,7 @@ class TestChatEndpoint:
             )
             mock_llm.invoke.return_value = mock_response
 
-            response = test_client.post("/chat", json=request_data)
+            response = test_client.post("/api/v1/genai/chat", json=request_data)
 
             assert response.status_code == 200
             result = response.json()
@@ -266,7 +276,7 @@ class TestChatEndpoint:
             )
             mock_llm.invoke.return_value = mock_response
 
-            response = test_client.post("/chat", json=request_data)
+            response = test_client.post("/api/v1/genai/chat", json=request_data)
 
             assert response.status_code == 200
             result = response.json()
@@ -446,7 +456,7 @@ class TestErrorHandling:
             mock_graph.invoke.side_effect = Exception("Unexpected error")
 
             response = test_client.post(
-                "/anonymize", json=sample_anonymize_request
+                "/api/v1/genai/anonymize", json=sample_anonymize_request
             )
             assert response.status_code == 500
 
@@ -454,7 +464,9 @@ class TestErrorHandling:
     def test_validation_error_handling(self, test_client):
         """Test handling of validation errors."""
         invalid_request = {"invalidField": "value"}
-        response = test_client.post("/anonymize", json=invalid_request)
+        response = test_client.post(
+            "/api/v1/genai/anonymize", json=invalid_request
+        )
         assert response.status_code == 422
 
     @pytest.mark.integration

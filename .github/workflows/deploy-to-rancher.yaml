@@ -1,0 +1,54 @@
+name: Deploy to Rancher Cluster
+
+on:
+  workflow_call:
+    secrets:
+      KUBECONFIG:
+        required: true
+      OPENAI_API_KEY:
+        required: true
+  push:
+    branches:
+      - main
+      - feature/cicd
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set image tag
+        run: echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.30.1
+
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Ensure namespace exists
+        run: kubectl get ns oops-ops || kubectl create ns oops-ops
+
+      - name: Create OpenAI API key secret
+        run: |
+          kubectl create secret generic openai-secret \
+            --namespace oops-ops \
+            --from-literal=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+      
+      - name: Deploy using Helm
+        run: |
+          helm upgrade --install oopsops-app ./helm/oopsops \
+            --namespace oops-ops
