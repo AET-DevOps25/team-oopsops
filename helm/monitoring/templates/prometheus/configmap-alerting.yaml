@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerting-rules
+  namespace: {{ .Values.global.namespace }}
+data:
+
+  spring-alerts.yml: |
+    groups:
+      - name: spring-application
+        rules:
+          - alert: TestEmailAlert
+            expr: vector(1)
+            for: 10s
+            labels:
+              severity: warning
+            annotations:
+              summary: "Test email alert"
+              description: "This is a test alert to verify Alertmanager email configuration."
+          - alert: HighErrorRate
+            expr: sum(rate(http_server_requests_seconds_count{status=~"5..", namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service) / sum(rate(http_server_requests_seconds_count{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service) * 100 > {{ .Values.alerting.rules.highErrorRate.threshold | default 5 }}
+            for: {{ .Values.alerting.rules.highErrorRate.duration | default "5m" }}
+            labels:
+              severity: warning
+            annotations:
+              summary: "High error rate on {{`{{ $labels.service }}`}}"
+              description: "Error rate is above {{ .Values.alerting.rules.highErrorRate.threshold | default 5 }}% for the last {{ .Values.alerting.rules.highErrorRate.duration | default "5m" }} with current value: {{`{{ $value }}`}}%"
+              
+          - alert: SlowResponseTime
+            expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_max{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service, uri, le)) > {{ .Values.alerting.rules.slowResponseTime.threshold | default 0.5 }}
+            for: {{ .Values.alerting.rules.slowResponseTime.duration | default "5m" }}
+            labels:
+              severity: warning
+            annotations:
+              summary: "Slow response time on {{`{{ $labels.service }}`}} - {{`{{ $labels.uri }}`}}"
+              description: "95th percentile response time is above {{ .Values.alerting.rules.slowResponseTime.threshold | default 0.5 }}s for the last {{ .Values.alerting.rules.slowResponseTime.duration | default "5m" }} with current value: {{`{{ $value }}`}}s"
+              
+          - alert: HighJvmMemoryUsage
+            expr: sum(jvm_memory_used_bytes{area="heap", namespace="{{ .Values.targetApp.namespace }}"}) by (service) / sum(jvm_memory_max_bytes{area="heap", namespace="{{ .Values.targetApp.namespace }}"}) by (service) * 100 > 85
+            for: 5m
+            labels:
+              severity: warning

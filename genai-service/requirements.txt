@@ -18,3 +18,4 @@ httpx==0.28.1
 pytest-cov==6.2.1
 faker==37.4.0
 reportlab==4.4.2
+prometheus-fastapi-instrumentator

@@ -1,0 +1,118 @@
+{
+  "uid": "error-rate-dashboard",
+  "title": "Error Rate Dashboard",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "5xx Error Rate – Spring Boot",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])",
+          "legendFormat": "{{service}} {{uri}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.1 },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "5xx Error Rate – genai (FastAPI)",
+      "targets": [
+        {
+          "expr": "rate(http_request_duration_seconds_count{status=~\"5..\", job=\"kubernetes-genai-service\"}[5m])",
+          "legendFormat": "{{handler}}",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.1 },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "4xx Error Rate – Spring Boot",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{status=~\"4..\"}[5m])",
+          "legendFormat": "{{service}} {{uri}}",
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s",
+          "decimals": 2
+        }
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 }
+    },
+    {
+      "type": "timeseries",
+      "title": "4xx Error Rate – genai (FastAPI)",
+      "targets": [
+        {
+          "expr": "rate(http_request_duration_seconds_count{status=~\"4..\", job=\"kubernetes-genai-service\"}[5m])",
+          "legendFormat": "{{handler}}",
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s",
+          "decimals": 2
+        }
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 }
+    }
+  ]
+}

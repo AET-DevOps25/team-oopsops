@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: anonymization-service
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: anonymization-service
 spec:
   selector:
     app: anonymization-service

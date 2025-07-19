@@ -1,0 +1,21 @@
+---
+# PodMonitor for Application Pods
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: app-pods-monitor
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    monitoring: "true"
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.targetApp.namespace }}
+  selector:
+    matchLabels:
+      monitoring: "enabled"
+  podMetricsEndpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      scrapeTimeout: 10s

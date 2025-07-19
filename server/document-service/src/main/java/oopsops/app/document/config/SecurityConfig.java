@@ -17,7 +17,7 @@ public class SecurityConfig {
       .csrf(csrf -> csrf.disable())
       .authorizeHttpRequests(auth -> auth
         .requestMatchers("/api/v1/documents/**").authenticated()
-        .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+        .requestMatchers("/actuator/prometheus", "/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
         .anyRequest().permitAll()
       )
       .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));

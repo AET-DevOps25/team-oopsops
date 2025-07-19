@@ -1,0 +1,14 @@
+apiVersion: v2
+name: oopsops-monitoring-app
+description: A Helm chart for OopsOps Monitoring Stack (Prometheus & Grafana)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - monitoring
+  - prometheus
+  - grafana
+
+maintainers:
+  - name: OopsOps Team
