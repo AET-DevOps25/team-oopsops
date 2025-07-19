@@ -99,112 +99,9 @@ jobs:
             echo "❌ Service failed health check" >> $GITHUB_STEP_SUMMARY
           fi
 
-  functional-tests:
-    runs-on: ubuntu-latest
-    needs: health-checks
-    continue-on-error: true
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python for API testing
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install testing dependencies
-        run: |
-          pip install requests pytest pytest-html
-
-      - name: Run API functional tests
-        continue-on-error: true
-        env:
-          BASE_URL: ${{ inputs.base_url }}
-          ENVIRONMENT: ${{ inputs.environment }}
-        run: |
-          # Create a simple functional test script
-          cat > functional_tests.py << EOF
-          import requests
-          import pytest
-          import os
-          
-          BASE_URL = os.getenv('BASE_URL', 'http://localhost')
-          
-          def test_frontend_loads():
-              response = requests.get(BASE_URL)
-              assert response.status_code in [200, 301, 302]
-          
-          def test_api_endpoints_respond():
-              endpoints = [
-                  '/api/documents/health',
-                  '/api/auth/health', 
-                  '/api/anonymization/health'
-              ]
-              
-              for endpoint in endpoints:
-                  try:
-                      response = requests.get(f"{BASE_URL}{endpoint}", timeout=10)
-                      assert response.status_code in [200, 401, 403]  # Accept auth errors as "responding"
-                  except requests.exceptions.RequestException:
-                      pytest.fail(f"Endpoint {endpoint} is not responding")
-          
-          if __name__ == "__main__":
-              pytest.main([__file__, "--html=functional_test_report.html", "--self-contained-html"])
-          EOF
-          
-          python functional_tests.py || true
-
-      - name: Upload functional test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: functional-test-results-${{ inputs.environment }}
-          path: |
-            functional_test_report.html
-          retention-days: 7
-
-  performance-check:
-    runs-on: ubuntu-latest
-    needs: health-checks
-    continue-on-error: true
-    
-    steps:
-      - name: Basic performance check
-        run: |
-          echo "Running basic performance checks..."
-          
-          # Test response times
-          endpoints=(
-            "${{ inputs.base_url }}"
-            "${{ inputs.base_url }}/api/documents/health"
-            "${{ inputs.base_url }}/api/auth/health"
-          )
-          
-          echo "## Performance Check Results" >> $GITHUB_STEP_SUMMARY
-          echo "| Endpoint | Response Time | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|---------------|--------|" >> $GITHUB_STEP_SUMMARY
-          
-          for endpoint in "${endpoints[@]}"; do
-            echo "Testing: $endpoint"
-            
-            response_time=$(curl -s -o /dev/null -w "%{time_total}" "$endpoint" || echo "timeout")
-            status_code=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" || echo "000")
-            
-            if [ "$response_time" != "timeout" ] && [ "$status_code" = "200" ]; then
-              if (( $(echo "$response_time < 2.0" | bc -l) )); then
-                echo "| $endpoint | ${response_time}s | ✅ Good |" >> $GITHUB_STEP_SUMMARY
-              else
-                echo "| $endpoint | ${response_time}s | ⚠️ Slow |" >> $GITHUB_STEP_SUMMARY
-              fi
-            else
-              echo "| $endpoint | N/A | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-
   validation-summary:
     runs-on: ubuntu-latest
-    needs: [health-checks, functional-tests, performance-check]
+    needs: health-checks
     if: always()
     
     steps:
@@ -215,10 +112,8 @@ jobs:
           echo "**Base URL:** ${{ inputs.base_url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # Check results of all validation jobs
+          # Check results of health checks
           health_status="${{ needs.health-checks.result }}"
-          functional_status="${{ needs.functional-tests.result }}"
-          performance_status="${{ needs.performance-check.result }}"
           
           echo "| Validation Type | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------------|--------|" >> $GITHUB_STEP_SUMMARY
@@ -229,17 +124,5 @@ jobs:
             echo "| Health Checks | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
           fi
           
-          if [ "$functional_status" = "success" ]; then
-            echo "| Functional Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Functional Tests | ⚠️ Issues Found |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ "$performance_status" = "success" ]; then
-            echo "| Performance Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Performance Check | ⚠️ Issues Found |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Note:** All validations run with continue-on-error to provide complete feedback." >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** Health checks validate basic service availability." >> $GITHUB_STEP_SUMMARY

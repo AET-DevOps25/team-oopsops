@@ -81,10 +81,17 @@ jobs:
                 echo "- $FAILURES found" >> $GITHUB_STEP_SUMMARY
               fi
             else
-              echo "❌ Test report not found for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️ Test report HTML not found for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
             fi
           else
-            echo "❌ Test results directory not found for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Test results directory not found for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+            echo "Checking for any test output..." >> $GITHUB_STEP_SUMMARY
+            if [ -d "${{ matrix.service }}/build" ]; then
+              echo "Build directory exists, listing contents:" >> $GITHUB_STEP_SUMMARY
+              ls -la "${{ matrix.service }}/build/" >> $GITHUB_STEP_SUMMARY || echo "Cannot list build directory" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "No build directory found for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+            fi
           fi
 
       - name: Upload test results for ${{ matrix.service }}
@@ -104,29 +111,3 @@ jobs:
           name: springboot-test-logs-${{ matrix.service }}
           path: server/${{ matrix.service }}/build/reports/
           retention-days: 3
-
-  test-summary:
-    runs-on: ubuntu-latest
-    needs: test-springboot-services
-    if: always()
-    
-    steps:
-      - name: Generate overall test summary
-        run: |
-          echo "## SpringBoot Services Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          
-          # Check each service status
-          services=("document-service" "authentication-service" "anonymization-service")
-          for service in "${services[@]}"; do
-            status="${{ needs.test-springboot-services.result }}"
-            if [ "$status" = "success" ]; then
-              echo "| $service | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| $service | ⚠️ See details |" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Note: Tests run with continue-on-error to ensure pipeline completion" >> $GITHUB_STEP_SUMMARY

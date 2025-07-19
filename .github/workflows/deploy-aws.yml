@@ -40,19 +40,44 @@ jobs:
           AWS_EC2_PRIVATE_KEY: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
 
       - name: Test Network Connectivity
+        id: connectivity_test
         run: |
           echo "=== Network Connectivity Tests ==="
+          connectivity_failed=false
+          
           echo "Testing ping to EC2 instance..."
-          ping -c 3 ${{ vars.EC2_PUBLIC_IP }} || echo "Ping failed"
+          if ! ping -c 3 ${{ vars.EC2_PUBLIC_IP }}; then
+            echo "❌ Ping failed"
+            connectivity_failed=true
+          else
+            echo "✅ Ping successful"
+          fi
           
           echo "Testing port 22 connectivity..."
-          timeout 10 telnet ${{ vars.EC2_PUBLIC_IP }} 22 || echo "Port 22 not accessible"
+          if ! timeout 10 telnet ${{ vars.EC2_PUBLIC_IP }} 22; then
+            echo "❌ Port 22 not accessible"
+            connectivity_failed=true
+          else
+            echo "✅ Port 22 accessible"
+          fi
           
           echo "Testing with nmap..."
-          nmap -p 22 ${{ vars.EC2_PUBLIC_IP }} || echo "nmap failed"
+          if ! nmap -p 22 ${{ vars.EC2_PUBLIC_IP }}; then
+            echo "❌ nmap failed"
+            connectivity_failed=true
+          else
+            echo "✅ nmap successful"
+          fi
           
           echo "Getting GitHub runner IP..."
-          curl -s https://httpbin.org/ip
+          curl -s https://httpbin.org/ip || echo "Failed to get runner IP"
+          
+          if [ "$connectivity_failed" = true ]; then
+            echo "CONNECTIVITY_FAILED=true" >> $GITHUB_ENV
+            echo "::warning::Network connectivity tests failed - deployment will proceed with timeout"
+          else
+            echo "CONNECTIVITY_FAILED=false" >> $GITHUB_ENV
+          fi
           
       - name: Setup SSH Key
         run: |
@@ -62,11 +87,23 @@ jobs:
           ssh-keyscan -t rsa ${{ vars.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts || echo "SSH keyscan failed"
 
       - name: Test SSH Connection
+        id: ssh_test
         run: |
-          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }} "echo 'SSH connection successful'; uptime; docker --version" || echo "SSH test failed"
+          ssh_failed=false
+          if ! ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }} "echo 'SSH connection successful'; uptime; docker --version"; then
+            echo "❌ SSH test failed"
+            ssh_failed=true
+            echo "SSH_FAILED=true" >> $GITHUB_ENV
+          else
+            echo "✅ SSH connection successful"
+            echo "SSH_FAILED=false" >> $GITHUB_ENV
+          fi
 
       - name: Copy Docker Compose File to EC2 (Enhanced)
+        id: copy_files
         uses: appleboy/scp-action@v0.1.7
+        timeout-minutes: 8
+        continue-on-error: true
         with:
           host: ${{ vars.EC2_PUBLIC_IP }}
           username: ${{ vars.AWS_EC2_USER }}
@@ -78,8 +115,24 @@ jobs:
           debug: true
           overwrite: true
 
+      - name: Check deployment prerequisites
+        id: deployment_check
+        run: |
+          if [ "${{ steps.copy_files.outcome }}" = "failure" ] || [ "$CONNECTIVITY_FAILED" = "true" ] || [ "$SSH_FAILED" = "true" ]; then
+            echo "SKIP_DEPLOYMENT=true" >> $GITHUB_ENV
+            echo "::warning::AWS deployment will be skipped due to connectivity issues"
+            echo "## ⚠️ AWS Deployment Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "**Reason:** Network connectivity or file copy failed" >> $GITHUB_STEP_SUMMARY
+            echo "- Connectivity test: ${{ env.CONNECTIVITY_FAILED == 'true' && '❌ Failed' || '✅ Passed' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- SSH test: ${{ env.SSH_FAILED == 'true' && '❌ Failed' || '✅ Passed' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- File copy: ${{ steps.copy_files.outcome == 'failure' && '❌ Failed' || '✅ Passed' }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "SKIP_DEPLOYMENT=false" >> $GITHUB_ENV
+          fi
+
       - name: Fallback - Manual File Copy
-        if: failure()
+        if: failure() && env.SKIP_DEPLOYMENT != 'true'
+        continue-on-error: true
         run: |
           echo "Primary SCP failed, trying manual copy..."
           
@@ -93,6 +146,7 @@ jobs:
             ./keycloak ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }}:/home/${{ vars.AWS_EC2_USER }}/
 
       - name: Create .env file on EC2
+        if: env.SKIP_DEPLOYMENT != 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ vars.EC2_PUBLIC_IP }}
@@ -120,6 +174,7 @@ jobs:
             echo "Keycloak realm configuration updated."
 
       - name: Deploy with Docker Compose
+        if: env.SKIP_DEPLOYMENT != 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ vars.EC2_PUBLIC_IP }}
@@ -166,3 +221,14 @@ jobs:
             docker compose -f compose.aws.yml logs --tail=50
             
             echo "--- AWS Deployment completed successfully ---"
+
+      - name: Deployment Status Summary
+        if: always()
+        run: |
+          echo "## AWS Deployment Status" >> $GITHUB_STEP_SUMMARY
+          if [ "$SKIP_DEPLOYMENT" = "true" ]; then
+            echo "⚠️ **Deployment Skipped** - Network connectivity issues" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ **Deployment Completed Successfully**" >> $GITHUB_STEP_SUMMARY
+          fi

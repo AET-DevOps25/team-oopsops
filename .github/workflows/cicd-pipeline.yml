@@ -63,7 +63,7 @@ jobs:
     uses: ./.github/workflows/post-deployment-validation.yml
     with:
       environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-      base_url: 'https://rancher.${{ vars.RANCHER_DOMAIN }}'
+      base_url: 'https://redactiq.student.k8s.aet.cit.tum.de'
 
   # === PIPELINE STATUS REPORTING ===
   pipeline-summary:
@@ -144,5 +144,5 @@ jobs:
           fi
           
           if [[ "$rancher_status" == "success" ]]; then
-            echo "- **Rancher:** https://rancher.${{ vars.RANCHER_DOMAIN }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Rancher:** https://redactiq.student.k8s.aet.cit.tum.de" >> $GITHUB_STEP_SUMMARY
           fi
