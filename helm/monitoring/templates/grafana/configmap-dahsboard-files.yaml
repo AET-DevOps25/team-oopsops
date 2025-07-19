@@ -9,3 +9,5 @@ data:
 {{ .Files.Get "dashboards/traffic-summary.json" | indent 4 }}
   genai-latency.json: |
 {{ .Files.Get "dashboards/genai-latency.json" | indent 4 }}
+  error-rate-dashboard.json: |
+{{ .Files.Get "dashboards/error-rate-dashboard.json" | indent 4 }}

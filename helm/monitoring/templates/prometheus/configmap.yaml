@@ -35,7 +35,7 @@ data:
           - role: endpoints
             namespaces:
               names:
-                - oopsops-test
+                - oops-ops
         relabel_configs:
           # Only keep endpoints where service has a servicemonitor
           - source_labels: [__meta_kubernetes_service_name]
@@ -57,7 +57,7 @@ data:
           - role: endpoints
             namespaces:
               names:
-                - oopsops-test
+                - oops-ops
         relabel_configs:
           # Only keep genai-service
           - source_labels: [__meta_kubernetes_service_name]
