@@ -5,9 +5,6 @@ name: Build and Push Docker Images
 
 on:
   workflow_call:
-    secrets:
-      GITHUB_TOKEN:
-        required: true
   push:
     branches:
       - '**'
