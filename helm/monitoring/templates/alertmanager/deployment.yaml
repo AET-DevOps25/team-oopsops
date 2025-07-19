@@ -24,7 +24,7 @@ spec:
             - name: alertmanager-config
               mountPath: /etc/alertmanager
             - name: email-secret
-              mountPath: /etc/alertmanager-secret
+              mountPath: /etc/alertmanager/secret
               readOnly: true
       volumes:
         - name: alertmanager-config

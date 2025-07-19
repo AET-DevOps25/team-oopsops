@@ -7,17 +7,17 @@ data:
   alertmanager.yml: |
     global:
       resolve_timeout: 5m
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'yosr.nabli99@gmail.com'
+      smtp_auth_username: 'yosr.nabli99@gmail.com'
+      smtp_auth_password: '/etc/alertmanager/secret/email-auth-password'
+      smtp_require_tls: true
 
     route:
-      receiver: 'default-receiver'
+      receiver: 'email-notifications'
 
     receivers:
-      - name: 'default-receiver'
+      - name: 'email-notifications'
         email_configs:
           - to: 'yosr.nabli@tum.de'
-            from: 'alertmanager@redacta.com'
-            smarthost: 'smtp.gmail.com:587'
-            auth_username: '{{ .Values.alertmanager.email.username }}'
-            auth_password: {{ (lookup "v1" "Secret" "oopsops-monitoring" "alertmanager-secret").data.email-auth-password | b64dec | quote }}
-            auth_identity: '{{ .Values.alertmanager.email.username }}'
-            require_tls: true
+            send_resolved: true

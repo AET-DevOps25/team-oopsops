@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-provider
+  name: grafana-dashboards
   namespace: oopsops-monitoring
   labels:
     app.kubernetes.io/name: grafana

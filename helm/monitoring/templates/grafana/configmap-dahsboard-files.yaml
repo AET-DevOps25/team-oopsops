@@ -2,10 +2,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-dashboard-files
-  namespace: oopsops-monitoring
   labels:
-    app.kubernetes.io/name: grafana
-    app.kubernetes.io/component: dashboard-files
+    grafana_dashboard: "1"
 data:
-  sample-dashboard.json: |
-{{ .Files.Get "dashboards/sample-dashboard.json" | indent 4 }}
+  traffic-summary.json: |
+{{ .Files.Get "dashboards/traffic-summary.json" | indent 4 }}
+  genai-latency.json: |
+{{ .Files.Get "dashboards/genai-latency.json" | indent 4 }}

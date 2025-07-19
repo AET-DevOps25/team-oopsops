@@ -9,6 +9,14 @@ data:
     groups:
       - name: spring-application
         rules:
+          - alert: TestEmailAlert
+            expr: vector(1)
+            for: 10s
+            labels:
+              severity: warning
+            annotations:
+              summary: "Test email alert"
+              description: "This is a test alert to verify Alertmanager email configuration."
           - alert: HighErrorRate
             expr: sum(rate(http_server_requests_seconds_count{status=~"5..", namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service) / sum(rate(http_server_requests_seconds_count{namespace="{{ .Values.targetApp.namespace }}"}[5m])) by (service) * 100 > {{ .Values.alerting.rules.highErrorRate.threshold | default 5 }}
             for: {{ .Values.alerting.rules.highErrorRate.duration | default "5m" }}
