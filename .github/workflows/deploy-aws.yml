@@ -1,31 +1,34 @@
+# ABOUTME: AWS deployment workflow that handles only the deployment to EC2 instances via Docker Compose
+# ABOUTME: This workflow expects Docker images to already be built and available in the container registry
+
 name: Deploy to AWS
 
 on:
-  # Allows to manually run this workflow from the Actions tab
-  # You can select which branch to run it on from the UI.
+  workflow_call:
+    secrets:
+      AWS_EC2_PRIVATE_KEY:
+        required: true
+      POSTGRES_USER:
+        required: true
+      POSTGRES_PASSWORD:
+        required: true
+      OPENAI_API_KEY:
+        required: true
+      KEYCLOAK_ADMIN_USER:
+        required: true
+      KEYCLOAK_ADMIN_PASSWORD:
+        required: true
+      GITHUB_TOKEN:
+        required: true
   workflow_dispatch:
-  # Triggers the workflow on pushes to main branch and feature branches
-  # Main branch for production deployments, feature branches for testing
-  push:
-    branches:
-      - 'main'
-      - 'feature/**'
 
 jobs:
-  test-springboot:
-    uses: ./.github/workflows/test-springboot-services.yml
-    
-  test-genai:
-    uses: ./.github/workflows/test-genai-service.yml
-    secrets: inherit
-
   deploy:
-    needs: [test-springboot, test-genai]
-    if: always()
     runs-on: ubuntu-latest
     environment:
       name: oopoops
       url: 'https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io'
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -38,7 +41,33 @@ jobs:
         env:
           AWS_EC2_PRIVATE_KEY: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
 
-      - name: Copy Docker Compose File to EC2
+      - name: Test Network Connectivity
+        run: |
+          echo "=== Network Connectivity Tests ==="
+          echo "Testing ping to EC2 instance..."
+          ping -c 3 ${{ vars.EC2_PUBLIC_IP }} || echo "Ping failed"
+          
+          echo "Testing port 22 connectivity..."
+          timeout 10 telnet ${{ vars.EC2_PUBLIC_IP }} 22 || echo "Port 22 not accessible"
+          
+          echo "Testing with nmap..."
+          nmap -p 22 ${{ vars.EC2_PUBLIC_IP }} || echo "nmap failed"
+          
+          echo "Getting GitHub runner IP..."
+          curl -s https://httpbin.org/ip
+          
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa ${{ vars.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts || echo "SSH keyscan failed"
+
+      - name: Test SSH Connection
+        run: |
+          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }} "echo 'SSH connection successful'; uptime; docker --version" || echo "SSH test failed"
+
+      - name: Copy Docker Compose File to EC2 (Enhanced)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ vars.EC2_PUBLIC_IP }}
@@ -46,6 +75,24 @@ jobs:
           key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
           source: "./compose.aws.yml,./create-multiple-dbs.sh,./keycloak"
           target: /home/${{ vars.AWS_EC2_USER }}
+          timeout: 60s
+          command_timeout: 120s
+          debug: true
+          overwrite: true
+
+      - name: Fallback - Manual File Copy
+        if: failure()
+        run: |
+          echo "Primary SCP failed, trying manual copy..."
+          
+          scp -o ConnectTimeout=60 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa \
+            ./compose.aws.yml ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }}:/home/${{ vars.AWS_EC2_USER }}/
+          
+          scp -o ConnectTimeout=60 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa \
+            ./create-multiple-dbs.sh ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }}:/home/${{ vars.AWS_EC2_USER }}/
+          
+          scp -r -o ConnectTimeout=60 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa \
+            ./keycloak ${{ vars.AWS_EC2_USER }}@${{ vars.EC2_PUBLIC_IP }}:/home/${{ vars.AWS_EC2_USER }}/
 
       - name: Create .env file on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -53,11 +100,11 @@ jobs:
           host: ${{ vars.EC2_PUBLIC_IP }}
           username: ${{ vars.AWS_EC2_USER }}
           key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          timeout: 60s
+          command_timeout: 120s
           script: |
-            # Exit immediately if a command exits with a non-zero status.
             set -e
             echo "--- Creating .env file ---"
-            # Overwrite existing file to ensure it's clean on each deployment
             > .env
             echo "CLIENT_HOST=client.${{ vars.EC2_PUBLIC_IP }}.nip.io" >> .env
             echo "API_HOST=api.${{ vars.EC2_PUBLIC_IP }}.nip.io" >> .env
@@ -71,7 +118,6 @@ jobs:
 
             echo "--- Updating Keycloak realm configuration ---"
             CLIENT_HOST_VAR="client.${{ vars.EC2_PUBLIC_IP }}.nip.io"
-            # Use a different delimiter for sed to avoid issues with slashes in the URL
             sed -i "s|http://localhost:3000|https://${CLIENT_HOST_VAR}|g" ./keycloak/myrealm.json
             echo "Keycloak realm configuration updated."
 
@@ -81,8 +127,9 @@ jobs:
           host: ${{ vars.EC2_PUBLIC_IP }}
           username: ${{ vars.AWS_EC2_USER }}
           key: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
+          timeout: 300s
+          command_timeout: 600s
           script: |
-            # Exit on error, print commands
             set -ex
             
             echo "--- Verifying Docker installation ---"
@@ -99,19 +146,10 @@ jobs:
             docker compose -f compose.aws.yml down || echo "No running containers to stop. Continuing."
 
             echo "--- Cleaning up Docker resources to free space ---"
-            # Remove all stopped containers
             docker container prune -f || echo "No containers to prune"
-            
-            # Remove all unused images (not just dangling ones)
             docker image prune -a -f || echo "No images to prune"
-            
-            # Remove all unused volumes (be careful with data!)
             docker volume prune -f || echo "No volumes to prune"
-            
-            # Remove all unused networks
             docker network prune -f || echo "No networks to prune"
-            
-            # Remove build cache
             docker builder prune -f || echo "No build cache to prune"
 
             echo "--- Checking disk space after cleanup ---"
@@ -129,12 +167,4 @@ jobs:
             echo "--- Displaying recent logs for troubleshooting ---"
             docker compose -f compose.aws.yml logs --tail=50
             
-            echo "--- Deployment completed successfully ---"
-
-  post-deployment-validation:
-    needs: deploy
-    if: always() && needs.deploy.result == 'success'
-    uses: ./.github/workflows/post-deployment-validation.yml
-    with:
-      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-      base_url: 'https://client.${{ vars.EC2_PUBLIC_IP }}.nip.io'
+            echo "--- AWS Deployment completed successfully ---"

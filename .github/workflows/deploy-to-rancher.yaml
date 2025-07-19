@@ -1,6 +1,12 @@
 name: Deploy to Rancher Cluster
 
 on:
+  workflow_call:
+    secrets:
+      KUBECONFIG:
+        required: true
+      OPENAI_API_KEY:
+        required: true
   push:
     branches:
       - main
