@@ -115,10 +115,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Decode Kubeconfig
+      - name: Set up kubeconfig
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v3
