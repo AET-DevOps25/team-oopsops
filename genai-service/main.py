@@ -8,6 +8,7 @@ from models import (
     ChatResponse,
     DocumentUploadResponse,
     MarkdownUploadRequest,
+    TextUploadRequest,
     ConversationRequest,
     ConversationResponse,
     DocumentListResponse,
@@ -37,6 +38,8 @@ instrumentator = Instrumentator(
 
 # Instrument the app and expose the metrics
 instrumentator.instrument(app).expose(app)
+
+
 # Add error handlers
 @app.exception_handler(RuntimeError)
 async def runtime_error_handler(request, exc):
@@ -82,13 +85,11 @@ def anonymize(request: AnonymizeRequest):
 
         changed_terms = result["changed_terms"]
         anonymized_text = call_anonymization_service(
-            original_text=request.originalText,
-            changed_terms=changed_terms
+            original_text=request.originalText, changed_terms=changed_terms
         )
 
         return GenAiResponse(
-            responseText=anonymized_text,
-            changedTerms=changed_terms
+            responseText=anonymized_text, changedTerms=changed_terms
         )
 
     except RuntimeError as e:
@@ -97,7 +98,6 @@ def anonymize(request: AnonymizeRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
-
 
 
 def call_anonymization_service(
@@ -125,6 +125,7 @@ def summarize(request: SummarizeRequest):
         }
     )
     return GenAiResponse(responseText=result["summarized_text"])
+
 
 @app.post("/api/v1/genai/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
@@ -183,6 +184,25 @@ def upload_markdown(request: MarkdownUploadRequest):
         return DocumentUploadResponse(
             document_id=document_id,
             filename=request.filename,
+            chunks_created=chunks,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# New endpoint for uploading text content
+@app.post("/documents/upload-text", response_model=DocumentUploadResponse)
+def upload_text(request: TextUploadRequest):
+    try:
+        document_id, chunks = vector_store.ingest_text(
+            content=request.content,
+            title=request.title,
+            metadata=request.metadata,
+        )
+
+        return DocumentUploadResponse(
+            document_id=document_id,
+            filename=request.title,
             chunks_created=chunks,
         )
     except Exception as e:
