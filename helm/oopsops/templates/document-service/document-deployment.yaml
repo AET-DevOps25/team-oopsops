@@ -48,29 +48,29 @@ spec:
               key: postgres-password
         - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
           value: "https://{{ .Values.ingress.host }}/auth/realms/{{ .Values.services.keycloak.realm }}"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: {{ .Values.services.documentService.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 15
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: {{ .Values.services.documentService.port }}
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        resources:
-          requests:
-            memory: {{ .Values.services.documentService.resources.requests.memory }}
-            cpu: {{ .Values.services.documentService.resources.requests.cpu }}
-          limits:
-            memory: {{ .Values.services.documentService.resources.limits.memory }}
-            cpu: {{ .Values.services.documentService.resources.limits.cpu }}
+        # livenessProbe:
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: {{ .Values.services.documentService.port }}
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 15
+        #   timeoutSeconds: 5
+        #   failureThreshold: 3
+        # readinessProbe:
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: {{ .Values.services.documentService.port }}
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        #   failureThreshold: 3
+        # resources:
+        #   requests:
+        #     memory: {{ .Values.services.documentService.resources.requests.memory }}
+        #     cpu: {{ .Values.services.documentService.resources.requests.cpu }}
+        #   limits:
+        #     memory: {{ .Values.services.documentService.resources.limits.memory }}
+        #     cpu: {{ .Values.services.documentService.resources.limits.cpu }}
         volumeMounts:
         - name: uploads
           mountPath: /app/uploads
