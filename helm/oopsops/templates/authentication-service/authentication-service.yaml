@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: authentication-service
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: authentication-service
 spec:
   selector:
     app: authentication-service

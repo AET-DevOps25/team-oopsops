@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: genai-service
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: genai-service
 spec:
   selector:
     app: genai-service
