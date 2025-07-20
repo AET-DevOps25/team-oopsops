@@ -1,25 +1,24 @@
 # 📝 System Overview & Architecture
 
-
 # 1. Initial System Structure
 
 ## Use Case Diagram
 
-The Use Case Diagram illustrates the interactions between users and the system, highlighting the primary functionalities and user roles.
+The Use Case Diagram illustrates the interactions between users and the system, highlighting the primary functionalities.
 
-![Use Case Diagram](diagrams/use_case_diagram.png "Use Case Diagram")
+![Use Case Diagram](diagrams/usecaseDiagram.png 'Use Case Diagram')
 
 ## Analysis Object Model Diagram
 
-The Analysis Object Model represents the UML class diagram of different server services and their relationships. 
+The Analysis Object Model represents the UML class diagram of different server services and their relationships.
 
-![Analysis Object Model](diagrams/analysis_object_model.png "Analysis Object Model")
+![Analysis Object Model](diagrams/ClassDiagramFinal.png 'Analysis Object Model')
 
 ## High-level Architecture Diagram
 
 The High-level Architecture Diagram provides an overview of the system's structure, including its main components, data flow, and interactions.
 
-![Architecture Diagram](diagrams/architecture_diagram.png "High-level Architecture Diagram")
+![Architecture Diagram](diagrams/ArchDiagram.png 'High-level Architecture Diagram')
 
 # 2. First Product Backlog
 
@@ -34,7 +33,6 @@ The High-level Architecture Diagram provides an overview of the system's structu
 5. As a user, I want to save and download the anonymized document in my desired format so that I can use it as needed.
 6. As a user, I want to be able to generate a summary of the document so that I can quickly understand its content.
 7. As a user, I want an archive of my documents so that I can keep track of my Original vs. anonymized files as well as the generated summary.
-
 
 ### 2.1 User Story 1 - Upload Document
 
@@ -95,7 +93,6 @@ The High-level Architecture Diagram provides an overview of the system's structu
 - I want to see a list of all my uploaded documents in the archive.
 - I want to have a side by side comparison view to see the original and anonymized versions of each document in the archive (separate page).
 - I want to be able to search for specific documents in the archive, based on their file names.
-
 
 ### Summary Table
 
