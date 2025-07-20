@@ -17,7 +17,7 @@ spec:
           - genai-service
   namespaceSelector:
     matchNames:
-      - oops-ops
+      - oopsops-test
   endpoints:
     - targetPort: 8091  # For document-service
       path: /actuator/prometheus
