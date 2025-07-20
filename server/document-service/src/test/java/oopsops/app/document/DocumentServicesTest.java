@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,7 +47,6 @@ public class DocumentServicesTest {
     }
 
     @Test
-    @DisplayName("Happy path: PDF uploaded & processed")
     void validPdf_shouldProcessSuccessfully() {
         given(documentRepository.save(any(Document.class)))
                 .willAnswer(inv -> {
@@ -68,12 +66,11 @@ public class DocumentServicesTest {
         assertThat(result.getDocumentText().getText()).isEqualTo("extracted text");
 
         then(storageService).should().store(pdf);
-        then(pdfParsingService).should().extractText(any());
+        then(pdfParsingService).should().extractText(any(Path.class));
         then(documentRepository).should(times(2)).save(any());
     }
 
     @Test
-    @DisplayName("Uploading non-PDF throws InvalidFileTypeException")
     void nonPdf_shouldThrowInvalidFileType() {
         var badFile = new MockMultipartFile("file", "bar.pdf", "text/plain", new byte[0]);
 
@@ -86,7 +83,6 @@ public class DocumentServicesTest {
     }
 
     @Test
-    @DisplayName("Storage failure bubbles up")
     void storageFailure_shouldBubbleUp() {
         given(storageService.store(pdf))
                 .willThrow(new RuntimeException("disk full"));
@@ -99,10 +95,9 @@ public class DocumentServicesTest {
     }
 
     @Test
-    @DisplayName("Parsing failure bubbles up after initial save")
     void parsingFailure_shouldBubbleUp() {
         given(storageService.store(pdf)).willReturn("file:///tmp/foo.pdf");
-        given(pdfParsingService.extractText(any())).willThrow(new RuntimeException("parse error"));
+        given(pdfParsingService.extractText(any(Path.class))).willThrow(new RuntimeException("parse error"));
 
         assertThatThrownBy(() -> documentService.uploadAndProcess(userId, pdf))
                 .hasMessage("parse error");
