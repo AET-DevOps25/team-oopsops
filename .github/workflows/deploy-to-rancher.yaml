@@ -8,6 +8,7 @@ on:
       - main
       - feature/cicd
   workflow_dispatch:
+  workflow_call:
 
 env:
   REPO_OWNER: aet-devops25
