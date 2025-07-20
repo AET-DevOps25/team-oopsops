@@ -12,13 +12,13 @@ The Use Case Diagram illustrates the interactions between users and the system, 
 
 The Analysis Object Model represents the UML class diagram of different server services and their relationships.
 
-![Analysis Object Model](diagrams/analysis_object_model.png 'Analysis Object Model')
+![Analysis Object Model](diagrams/ClassDiagramFinal.png 'Analysis Object Model')
 
 ## High-level Architecture Diagram
 
 The High-level Architecture Diagram provides an overview of the system's structure, including its main components, data flow, and interactions.
 
-![Architecture Diagram](diagrams/architecture_diagram.png 'High-level Architecture Diagram')
+![Architecture Diagram](diagrams/ArchDiagram.png 'High-level Architecture Diagram')
 
 # 2. First Product Backlog
 

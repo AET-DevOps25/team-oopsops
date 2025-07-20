@@ -125,7 +125,43 @@ Redacta leverages **OpenAI GPT-4** models through a LangGraph-based workflow:
 
 **Hamza Chaouki**:
 
-- **Siddharth Khattar**:
+- Created the oops-ops Kubernetes namespace
+
+- Developed GitHub workflows to:
+
+  - Build and push container images
+
+  - Automatically deploy services to Kubernetes
+
+- Wrote unit, integration, and service application tests for:
+
+  - authentication-service
+
+  - document-service
+
+- Implemented the full authentication system:
+
+  - Frontend UI for registration and login
+
+  - authentication-service using Keycloak and OAuth2
+
+- Added JWT token propagation across all services for user identification and access control
+
+- Document Service
+
+- Built the complete document handling flow:
+
+  - Implemented database setup, entities, DTOs, controller
+
+  - Developed document upload and text extraction features
+
+- Database Setup
+
+  - Configured PostgreSQL databases for all services
+
+  - Set up pgAdmin for visual DB management and debugging
+
+**Siddharth Khattar**:
 
 - Initial project breakdown and architecture design along with tickets creation
 - Creation of various stages and overall orchestration workflows for the CI/CD pipeline
@@ -258,6 +294,8 @@ docker-compose logs -f
 - `POST /documents/upload` - Upload documents to vector store
 
 ### Architecture Overview
+
+> Note: More detailed diagrams and images can be found in the [docs/system_overview.md](docs/system_overview.md) file.
 
 #### **Microservices Architecture**
 
