@@ -14,6 +14,7 @@ import org.springframework.http.*;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.ws.rs.core.Response;
 import oopsops.app.authentication.service.KeycloakService;
 
 import java.util.Map;
@@ -106,7 +107,7 @@ public class KeycloakServiceTest {
 
     assertThatThrownBy(() -> svc.refreshWithToken("rt"))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Refresh failed");
+        .hasMessageContaining("Token refresh failed");
   }
 
   @Test
@@ -115,17 +116,19 @@ public class KeycloakServiceTest {
     Keycloak kcMock = mock(Keycloak.class);
     RealmResource realmR = mock(RealmResource.class);
     UsersResource usersR = mock(UsersResource.class);
+
     given(kcMock.realm(REALM)).willReturn(realmR);
     given(realmR.users()).willReturn(usersR);
 
+    Response rsp = mock(Response.class);
+    given(rsp.getStatus()).willReturn(201);
+    given(usersR.create(any(UserRepresentation.class))).willReturn(rsp);
+
     KeycloakBuilder builderMock = mock(
         KeycloakBuilder.class,
-        invocation -> {
-          if ("build".equals(invocation.getMethod().getName())) {
-            return kcMock;
-          }
-          return invocation.getMock();
-        });
+        invocation -> "build".equals(invocation.getMethod().getName())
+            ? kcMock
+            : invocation.getMock());
 
     try (MockedStatic<KeycloakBuilder> st = mockStatic(KeycloakBuilder.class)) {
       st.when(KeycloakBuilder::builder).thenReturn(builderMock);

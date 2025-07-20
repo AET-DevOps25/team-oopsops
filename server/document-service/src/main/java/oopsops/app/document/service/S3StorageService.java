@@ -12,7 +12,6 @@ public class S3StorageService implements StorageService {
     public String store(MultipartFile file) {
         // TBD
         // Placeholder for S3 storage logic
-        // throw new UnsupportedOperationException("S3 storage not implemented yet");
         return null;
     }
 
