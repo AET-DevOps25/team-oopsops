@@ -1,20 +1,82 @@
-name: Deploy to Rancher Cluster
+name: Build, Push & Deploy
 
 on:
-  workflow_call:
-    secrets:
-      KUBECONFIG:
-        required: true
-      OPENAI_API_KEY:
-        required: true
+  pull_request:
+    branches: ["**"]
   push:
     branches:
       - main
       - feature/cicd
+  workflow_dispatch:
+
+env:
+  REPO_OWNER: aet-devops25
+  CLIENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/client
+  DOCUMENT_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/document-service
+  ANONYMIZATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/anonymization-service
+  AUTHENTICATION_IMAGE: ghcr.io/aet-devops25/team-oopsops/server/authentication-service
+  GENAI_IMAGE: ghcr.io/aet-devops25/team-oopsops/genai-service
+  CLIENT_DIR: ./client
+  DOCUMENT_DIR: ./server/document-service
+  ANONYMIZATION_DIR: ./server/anonymization-service
+  AUTHENTICATION_DIR: ./server/authentication-service
+  GENAI_DIR: ./genai-service
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Client Image
+        run: |
+          docker build -t ${{ env.CLIENT_IMAGE }}:$TAG -t ${{ env.CLIENT_IMAGE }}:latest ${{ env.CLIENT_DIR }}
+          docker push ${{ env.CLIENT_IMAGE }}:$TAG
+          docker push ${{ env.CLIENT_IMAGE }}:latest
+
+      - name: Build and Push Document Service Image
+        run: |
+          docker build -t ${{ env.DOCUMENT_IMAGE }}:$TAG -t ${{ env.DOCUMENT_IMAGE }}:latest -f ${{ env.DOCUMENT_DIR }}/Dockerfile ./server
+          docker push ${{ env.DOCUMENT_IMAGE }}:$TAG
+          docker push ${{ env.DOCUMENT_IMAGE }}:latest
+
+      - name: Build and Push Anonymization Service Image
+        run: |
+          docker build -t ${{ env.ANONYMIZATION_IMAGE }}:$TAG -t ${{ env.ANONYMIZATION_IMAGE }}:latest -f ${{ env.ANONYMIZATION_DIR }}/Dockerfile ./server
+          docker push ${{ env.ANONYMIZATION_IMAGE }}:$TAG
+          docker push ${{ env.ANONYMIZATION_IMAGE }}:latest
+
+      - name: Build and Push Authentication Service Image
+        run: |
+          docker build -t ${{ env.AUTHENTICATION_IMAGE }}:$TAG -t ${{ env.AUTHENTICATION_IMAGE }}:latest -f ${{ env.AUTHENTICATION_DIR }}/Dockerfile ./server
+          docker push ${{ env.AUTHENTICATION_IMAGE }}:$TAG
+          docker push ${{ env.AUTHENTICATION_IMAGE }}:latest
+
+      - name: Build and Push GenAI Service Image
+        run: |
+          docker build -t ${{ env.GENAI_IMAGE }}:$TAG -t ${{ env.GENAI_IMAGE }}:latest -f ${{ env.GENAI_DIR }}/Dockerfile ${{ env.GENAI_DIR }}
+          docker push ${{ env.GENAI_IMAGE }}:$TAG
+          docker push ${{ env.GENAI_IMAGE }}:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/cicd')
 
     steps:
       - name: Checkout code
