@@ -5,12 +5,13 @@ import { useSummarization } from '@/hooks/useSummarization';
 import AnonymizationPanel from './AnonymizationPanel';
 import SummarizationPanel from './SummarizationPanel';
 import EditAnonymizedDialog from './EditAnonymizedDialog';
+import ChatWidget from './ChatWidget';
 import { DocumentContent } from '@/types/documentContent';
-import {Document} from '@/types/document';
+import { Document } from '@/types/document';
 import { toast } from 'sonner';
 
 type DocumentEditorProps = {
-  document?: Document | any;
+  document?: Document | undefined;
 };
 
 const DocumentEditor = ({ document }: DocumentEditorProps) => {
@@ -67,27 +68,27 @@ const DocumentEditor = ({ document }: DocumentEditorProps) => {
 
     const documentInfo = sessionStorage.getItem('currentDocument');
     if (document) {
-    const realContent: DocumentContent = {
-      title: document.fileName?.replace(/\.pdf$/i, '') || 'Untitled',
-      paragraph: document.documentText || '',
-      sensitive: [],
-      summary: '',
-    };
-    setDocumentData(realContent);
-  } else {
-    const documentInfo = sessionStorage.getItem('currentDocument');
-    if (documentInfo) {
-      const parsedInfo = JSON.parse(documentInfo);
       const realContent: DocumentContent = {
-        title: parsedInfo.fileName?.replace(/\.pdf$/i, '') || 'Untitled',
-        paragraph: parsedInfo.documentText || '',
+        title: document.fileName?.replace(/\.pdf$/i, '') || 'Untitled',
+        paragraph: document.documentText || '',
         sensitive: [],
         summary: '',
       };
       setDocumentData(realContent);
+    } else {
+      const documentInfo = sessionStorage.getItem('currentDocument');
+      if (documentInfo) {
+        const parsedInfo = JSON.parse(documentInfo);
+        const realContent: DocumentContent = {
+          title: parsedInfo.fileName?.replace(/\.pdf$/i, '') || 'Untitled',
+          paragraph: parsedInfo.documentText || '',
+          sensitive: [],
+          summary: '',
+        };
+        setDocumentData(realContent);
+      }
     }
-  }
-}, [document]);
+  }, [document]);
 
   if (!documentData) {
     return <div className="p-4 text-muted-foreground">Loading document...</div>;
@@ -132,6 +133,20 @@ const DocumentEditor = ({ document }: DocumentEditorProps) => {
     setCurrentEditItem(null);
   };
 
+  // Get the current document content for the chat widget
+  const getCurrentDocumentContent = () => {
+    if (!documentData) return '';
+
+    // Return the current paragraph content (could be original or anonymized)
+    return documentData.paragraph;
+  };
+
+  const getDocumentStatus = () => {
+    if (isAnonymized || hasManualEdits) {
+      return 'anonymized';
+    }
+    return 'original';
+  };
   return (
     <div className="w-full">
       <Tabs
@@ -197,6 +212,14 @@ const DocumentEditor = ({ document }: DocumentEditorProps) => {
         onReplacementChange={setTempReplacement}
         onSave={handleSaveEditInternal}
         onCancel={handleCancelEdit}
+      />
+
+      {/* Chat Widget - available for any document content */}
+      <ChatWidget
+        documentContent={getCurrentDocumentContent()}
+        documentTitle={documentData?.title}
+        documentStatus={getDocumentStatus()}
+        isVisible={!!documentData} // Show whenever document is loaded
       />
     </div>
   );
