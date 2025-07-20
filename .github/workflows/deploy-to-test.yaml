@@ -106,48 +106,48 @@ jobs:
           docker push ${{ env.GENAI_IMAGE }}:$TAG
           docker push ${{ env.GENAI_IMAGE }}:latest
 
-  deploy-helm:
-    name: Deploy to Helm cluster
-    needs: build-and-push
-    runs-on: ubuntu-latest
+  # deploy-helm:
+  #   name: Deploy to Helm cluster
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Set up kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
+  #     - name: Set up kubeconfig
+  #       run: |
+  #         mkdir -p ~/.kube
+  #         echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+  #         chmod 600 ~/.kube/config
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: v1.30.1
+  #     - name: Set up kubectl
+  #       uses: azure/setup-kubectl@v3
+  #       with:
+  #         version: v1.30.1
 
-      - name: Install Helm
-        run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  #     - name: Install Helm
+  #       run: |
+  #         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-      - name: Deploy via Helm
-        run: |
-          helm repo update
+  #     - name: Deploy via Helm
+  #       run: |
+  #         helm repo update
 
-          helm upgrade --install oopsops-app \
-            ./helm/oopsops \
-            --namespace oopsops-test \ 
-            --create-namespace \
-            --set client.image.tag=${{ env.TAG }} \
-            --set document-service.image.tag=${{ env.TAG }} \
-            --set anonymization-service.image.tag=${{ env.TAG }} \
-            --set authentication-service.image.tag=${{ env.TAG }} \
-            --set genai-service.image.tag=${{ env.TAG }} \
+  #         helm upgrade --install oopsops-app \
+  #           ./helm/oopsops \
+  #           --namespace oopsops-test \ 
+  #           --create-namespace \
+  #           --set client.image.tag=${{ env.TAG }} \
+  #           --set document-service.image.tag=${{ env.TAG }} \
+  #           --set anonymization-service.image.tag=${{ env.TAG }} \
+  #           --set authentication-service.image.tag=${{ env.TAG }} \
+  #           --set genai-service.image.tag=${{ env.TAG }} \
 
-      - name: Verify rollout
-        run: |
-          kubectl rollout status deployment/authentication-service -n oopsops-test
-          kubectl rollout status deployment/document-service     -n oopsops-test
-          kubectl rollout status deployment/anonymization-service -n oopsops-test
-          kubectl rollout status deployment/genai-service         -n oopsops-test
-          kubectl rollout status deployment/client               -n oopsops-test
+  #     - name: Verify rollout
+  #       run: |
+  #         kubectl rollout status deployment/authentication-service -n oopsops-test
+  #         kubectl rollout status deployment/document-service     -n oopsops-test
+  #         kubectl rollout status deployment/anonymization-service -n oopsops-test
+  #         kubectl rollout status deployment/genai-service         -n oopsops-test
+  #         kubectl rollout status deployment/client               -n oopsops-test
