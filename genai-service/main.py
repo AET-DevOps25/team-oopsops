@@ -145,7 +145,7 @@ def chat(request: ChatRequest):
     return ChatResponse(reply=reply.content)
 
 
-@app.post("/documents/upload", response_model=DocumentUploadResponse)
+@app.post("/api/v1/genai/documents/upload", response_model=DocumentUploadResponse)
 async def upload_document(file: UploadFile = File(...)):
     if not file.filename.endswith(".pdf"):
         raise HTTPException(
@@ -174,7 +174,7 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/documents/upload-markdown", response_model=DocumentUploadResponse)
+@app.post("/api/v1/genai/documents/upload-markdown", response_model=DocumentUploadResponse)
 def upload_markdown(request: MarkdownUploadRequest):
     try:
         document_id, chunks = vector_store.ingest_markdown(
@@ -191,7 +191,7 @@ def upload_markdown(request: MarkdownUploadRequest):
 
 
 # New endpoint for uploading text content
-@app.post("/documents/upload-text", response_model=DocumentUploadResponse)
+@app.post("/api/v1/genai/documents/upload-text", response_model=DocumentUploadResponse)
 def upload_text(request: TextUploadRequest):
     try:
         document_id, chunks = vector_store.ingest_text(
@@ -209,13 +209,13 @@ def upload_text(request: TextUploadRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/documents", response_model=DocumentListResponse)
+@app.get("/api/v1/genai/documents", response_model=DocumentListResponse)
 def list_documents():
     documents = vector_store.list_documents()
     return DocumentListResponse(documents=documents, total=len(documents))
 
 
-@app.delete("/documents/{document_id}")
+@app.delete("/api/v1/genai/documents/{document_id}")
 def delete_document(document_id: str):
     success = vector_store.delete_document(document_id)
     if not success:
@@ -223,7 +223,7 @@ def delete_document(document_id: str):
     return {"status": "success", "message": f"Document {document_id} deleted"}
 
 
-@app.post("/conversation/chat", response_model=ConversationResponse)
+@app.post("/api/v1/genai/conversation/chat", response_model=ConversationResponse)
 def chat_with_documents(request: ConversationRequest):
     try:
         result = conversation_manager.chat(
@@ -241,13 +241,13 @@ def chat_with_documents(request: ConversationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/conversation/{conversation_id}/history")
+@app.get("/api/v1/genai/conversation/{conversation_id}/history")
 def get_conversation_history(conversation_id: str):
     history = conversation_manager.get_conversation_history(conversation_id)
     return {"conversation_id": conversation_id, "history": history}
 
 
-@app.delete("/conversation/{conversation_id}")
+@app.delete("/api/v1/genai/conversation/{conversation_id}")
 def clear_conversation(conversation_id: str):
     success = conversation_manager.clear_conversation(conversation_id)
     if not success:
