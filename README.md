@@ -393,8 +393,18 @@ The project implements a step by step CI/CD pipeline with the following stages:
 #### **Metrics Collection**
 
 - Prometheus metrics integration
-- Custom application metrics
+- Custom application metrics (e.g., request latency, error rates)
 - Performance monitoring
+
+#### **Grafana Dashboards**
+- Error Rate Dashboard: Tracks 4xx/5xx HTTP error rates across all services
+- GenAI Latency Dashboard: Monitors response times for summarization and anonymization requests
+- Traffic Summary Dashboard: Aggregates and visualizes traffic for all service endpoints
+
+#### **Alerting**
+- Prometheus alert rules for critical thresholds (e.g., high error rate, slow response time)
+- AlertManager handles alert routing and notification (via email)
+- **Note**: Email notifications via Gmail SMTP are currently not functional due to authentication issues — despite using an app password, Gmail rejects the credentials with a “username and password not accepted” error.
 
 #### **Logging**
 
@@ -417,7 +427,64 @@ The project implements a step by step CI/CD pipeline with the following stages:
 - Code coverage reporting
 - Automated quality gates
 - Documentation as code
+### Monitoring Instructions 
+To deploy the monitoring stack (Prometheus, Grafana, Alertmanager) via Helm:
+```bash
+cd helm/monitoring
+```
+```bash
+helm upgrade --install oopsops-monitoring-app . \
+  --namespace oopsops-monitoring \
+  --create-namespace
+```
+#### **Accessing Metrics & Dashboards**
+- Prometheus UI:
+You can create and run custom PromQL queries directly in Prometheus: https://prometheus.monitoring.student.k8s.aet.cit.tum.de/
+-  Grafana Dashboards:
+Pre-configured dashboards are available in Grafana:
+https://grafana.monitoring.student.k8s.aet.cit.tum.de/
+The following dashboards are currently available:
 
+**Error Rate Dashboard:**
+
+- Shows 5xx and 4xx error rates for:
+
+- Spring Boot services
+
+- genai-service (FastAPI)
+
+Prometheus queries like:
+
+promql
+```bash
+rate(http_server_requests_seconds_count{status=~"5.."}[5m])
+rate(http_request_duration_seconds_count{status=~"5..", job="kubernetes-genai-service"}[5m])
+```
+**GenAI Service Latency:**
+
+- Shows average request latency for the GenAI service's endpoints:
+```bash
+/api/v1/genai/anonymize
+/api/v1/genai/summarize
+```
+Calculated as:
+
+```bash
+rate(http_request_duration_seconds_sum{...}) / rate(http_request_duration_seconds_count{...})
+```
+**Traffic Summary by Service & Endpoint:**
+
+- Visualizes total request count per service and endpoint in the last 24 hours.
+
+- Colored bars grouped by microservice:
+
+  1. Green → auth
+
+  2. Orange → document
+
+  3. Purple → anonymization
+
+  4. Red → genai
 ### Troubleshooting Guide
 
 #### **Common Issues**
