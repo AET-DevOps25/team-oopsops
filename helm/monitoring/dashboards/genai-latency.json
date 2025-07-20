@@ -1,0 +1,56 @@
+{
+  "uid": "genai-latency",
+  "title": "GenAI Service Latency",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Average Request Latency (GenAI)",
+      "targets": [
+        {
+          "expr": "rate(http_request_duration_seconds_sum{service=\"genai-service\", handler=\"/api/v1/genai/anonymize\"}[24h]) / rate(http_request_duration_seconds_count{service=\"genai-service\", handler=\"/api/v1/genai/anonymize\"}[24h])",
+          "legendFormat": "anonymize",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          }
+        },
+        {
+          "expr": "rate(http_request_duration_seconds_sum{service=\"genai-service\", handler=\"/api/v1/genai/summarize\"}[24h]) / rate(http_request_duration_seconds_count{service=\"genai-service\", handler=\"/api/v1/genai/summarize\"}[24h])",
+          "legendFormat": "summarize",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ]
+}

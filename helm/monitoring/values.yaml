@@ -1,0 +1,127 @@
+# Global configuration
+global:
+  namespace: oopsops-monitoring
+  storageClass: "csi-rbd-sc"
+
+# Target application configuration
+# This defines where your application services are deployed
+targetApp:
+  namespace: oopsops-test
+  services:
+    documentService:
+      port: 8091
+    authenticationService:
+      port: 8092
+    anonymizationService:
+      port: 8094
+    genaiService:
+      port: 8000
+
+# Prometheus configuration
+prometheus:
+  image: prom/prometheus:latest
+  storage: 10Gi
+  retention: 15d
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  # Scrape configuration
+  scrapeConfig:
+    globalInterval: 15s
+    evaluationInterval: 15s
+    kubernetes:
+      enabled: true
+      nodeMetrics: true
+      podMetrics: true
+      serviceMetrics: true
+      kubeletMetrics: true
+      cadvisorMetrics: true
+    
+    # Job configurations
+    jobs:
+      prometheus:
+        enabled: true
+        metricsPath: /metrics
+        
+      documentService:
+        enabled: true
+        metricsPath: /actuator/prometheus
+        
+      authenticationService:
+        enabled: true
+        metricsPath: /actuator/prometheus
+        
+      anonymizationService:
+        enabled: true
+        metricsPath: /actuator/prometheus
+        
+      genaiService:
+        enabled: true
+        metricsPath: /metrics
+
+      nodeExporter:
+        enabled: true
+        metricsPath: /metrics
+
+# Grafana configuration
+grafana:
+  image: grafana/grafana:latest
+  storage: 5Gi
+  adminUser: admin
+  adminPassword: admin
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  provisioning:
+    datasources:
+      enabled: true
+    dashboards:
+      enabled: true
+    alerting:
+      enabled: true
+
+# Alerting configuration
+alerting:
+  enabled: true
+  rules:
+    highErrorRate:
+      enabled: true
+      threshold: 5
+      duration: 5m
+    slowResponseTime:
+      enabled: true
+      threshold: 0.5
+      duration: 5m
+    highMemoryUsage:
+      enabled: true
+      threshold: 0.8
+      duration: 5m
+alertmanager:
+  email:
+    username: yosr.nabli99@gmail.com
+# Ingress configuration for monitoring tools
+ingress:
+  enabled: true
+  className: nginx
+  tls: true
+  hosts:
+    prometheus:
+      host: prometheus.monitoring.student.k8s.aet.cit.tum.de
+    grafana:
+      host: grafana.monitoring.student.k8s.aet.cit.tum.de
+  secretName: monitoring-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"

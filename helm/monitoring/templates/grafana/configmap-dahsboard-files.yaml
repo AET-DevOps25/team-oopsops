@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-files
+  labels:
+    grafana_dashboard: "1"
+data:
+  traffic-summary.json: |
+{{ .Files.Get "dashboards/traffic-summary.json" | indent 4 }}
+  genai-latency.json: |
+{{ .Files.Get "dashboards/genai-latency.json" | indent 4 }}
+  error-rate-dashboard.json: |
+{{ .Files.Get "dashboards/error-rate-dashboard.json" | indent 4 }}

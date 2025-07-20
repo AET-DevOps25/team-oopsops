@@ -2,6 +2,8 @@ package oopsops.app.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +35,34 @@ public class PdfParsingServiceTest {
     Path fake = Path.of("nonexistent.pdf");
 
     assertThatThrownBy(() -> pdfParsingService.extractText(fake))
-      .isInstanceOf(PdfParsingException.class)
-      .hasMessageContaining("Unable to parse PDF: " + fake);
+        .isInstanceOf(PdfParsingException.class)
+        .hasMessageContaining("Unable to parse PDF: " + fake);
   }
+
+  @Test
+  @DisplayName("extractText(InputStream) returns 'Hi!' for sample.pdf")
+  void extractText_fromStream_shouldReturnKnownContent() throws Exception {
+    try (InputStream is = getClass().getResourceAsStream("/sample.pdf")) {
+      String text = pdfParsingService.extractText(is);
+      assertThat(text).contains("Hi!");
+    }
+  }
+
+  @Test
+  @DisplayName("extractText(InputStream) with bad stream throws PdfParsingException")
+  void extractText_fromStream_withInvalidStream_shouldThrow() {
+    InputStream badStream = new ByteArrayInputStream("not a real PDF".getBytes());
+
+    assertThatThrownBy(() -> pdfParsingService.extractText(badStream))
+        .isInstanceOf(PdfParsingException.class)
+        .hasMessageContaining("Unable to parse PDF from stream");
+  }
+
+  @Test
+  @DisplayName("extractText(InputStream) with null stream throws NullPointerException")
+  void extractText_fromStream_withNull_shouldThrow() {
+    assertThatThrownBy(() -> pdfParsingService.extractText((InputStream) null))
+        .isInstanceOf(NullPointerException.class); // depending on how PDFBox handles null input
+  }
+
 }
