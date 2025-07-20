@@ -171,26 +171,20 @@ const DocumentArchive = () => {
               <div className="flex justify-between text-sm text-muted-foreground mb-4">
                 <span>{formatDate(doc.uploadDate)}</span>
                 <span
-                  className={`px-2 py-0.5 rounded-full transition-all duration-200 ${
-                    doc.status === 'Anonymized'
+                  className={`px-2 py-0.5 rounded-full transition-all duration-200 ${doc.status === 'Anonymized'
                       ? 'bg-green-100 text-green-800 group-hover:bg-green-200'
                       : 'bg-gray-100 text-gray-800 group-hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   {doc.status}
                 </span>
               </div>
               <Link
-                to={`/editor?id=${
-                  doc.documentType === 'anonymized'
-                    ? doc.originalDocumentId
-                    : doc.id
-                }`}
+                to="/editor"
+                state={{ document: doc }}
               >
                 <Button className="w-full transition-all duration-200 group-hover:bg-primary/90">
-                  {doc.documentType === 'anonymized'
-                    ? 'View Anonymized'
-                    : 'Open Document'}
+                  {doc.documentType === 'anonymized' ? 'View Anonymized' : 'Open Document'}
                 </Button>
               </Link>
             </div>

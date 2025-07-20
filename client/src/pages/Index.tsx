@@ -70,7 +70,7 @@ const Index = () => {
       if (response.status == "PROCESSED") {
         toast.success("File uploaded successfully!");
         sessionStorage.setItem("currentDocument", JSON.stringify(response));
-        navigate(`/editor`);
+        navigate(`/editor`, { state: { document: response } });
         setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";

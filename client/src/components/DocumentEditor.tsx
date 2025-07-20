@@ -6,13 +6,14 @@ import AnonymizationPanel from './AnonymizationPanel';
 import SummarizationPanel from './SummarizationPanel';
 import EditAnonymizedDialog from './EditAnonymizedDialog';
 import { DocumentContent } from '@/types/documentContent';
+import {Document} from '@/types/document';
 import { toast } from 'sonner';
 
 type DocumentEditorProps = {
-  documentId?: string | null;
+  document?: Document | any;
 };
 
-const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
+const DocumentEditor = ({ document }: DocumentEditorProps) => {
   const [activeTab, setActiveTab] = useState('anonymize');
   const [documentData, setDocumentData] = useState<DocumentContent>();
   const [selectedText, setSelectedText] = useState<string>('');
@@ -62,8 +63,18 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
   }, [documentData]);
 
   useEffect(() => {
-    console.log('Fetching document with ID:', documentId);
+    console.log('Fetching document with ID:', document);
 
+    const documentInfo = sessionStorage.getItem('currentDocument');
+    if (document) {
+    const realContent: DocumentContent = {
+      title: document.fileName?.replace(/\.pdf$/i, '') || 'Untitled',
+      paragraph: document.documentText || '',
+      sensitive: [],
+      summary: '',
+    };
+    setDocumentData(realContent);
+  } else {
     const documentInfo = sessionStorage.getItem('currentDocument');
     if (documentInfo) {
       const parsedInfo = JSON.parse(documentInfo);
@@ -73,10 +84,10 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
         sensitive: [],
         summary: '',
       };
-
       setDocumentData(realContent);
     }
-  }, [documentId]);
+  }
+}, [document]);
 
   if (!documentData) {
     return <div className="p-4 text-muted-foreground">Loading document...</div>;

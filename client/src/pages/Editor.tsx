@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import DocumentEditor from '@/components/DocumentEditor';
 import Navbar from '@/components/Navbar';
+import { Document } from '@/types/document';
+
+type DocumentState = {
+  document: Document; 
+};
 
 const Editor = () => {
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as DocumentState | undefined;
+  const document = state?.document;
+
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -31,7 +41,7 @@ const Editor = () => {
             </p>
           </div>
 
-          <DocumentEditor documentId={documentId} />
+          <DocumentEditor document={document} />
         </div>
       </main>
     </div>
