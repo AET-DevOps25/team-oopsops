@@ -165,7 +165,7 @@ const DocumentArchive = () => {
               key={doc.id}
               className="glass-panel p-6 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20 cursor-pointer group"
             >
-              <h3 className="font-medium text-lg mb-2 group-hover:text-primary transition-colors duration-200">
+              <h3 className="font-medium text-lg mb-2 group-hover:text-primary transition-colors duration-200 break-words word-wrap">
                 {doc.fileName}
               </h3>
               <div className="flex justify-between text-sm text-muted-foreground mb-4">
