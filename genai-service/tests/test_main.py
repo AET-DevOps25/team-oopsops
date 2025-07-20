@@ -296,7 +296,7 @@ class TestDocumentManagementEndpoints:
 
         with open(sample_pdf_file, "rb") as f:
             files = {"file": ("test.pdf", f, "application/pdf")}
-            response = test_client.post("/documents/upload", files=files)
+            response = test_client.post("/api/v1/genai/documents/upload", files=files)
 
         assert response.status_code == 200
         result = response.json()
@@ -313,7 +313,7 @@ class TestDocumentManagementEndpoints:
     ):
         """Test successful markdown upload."""
         response = test_client.post(
-            "/documents/upload-markdown", json=sample_markdown_upload_request
+            "/api/v1/genai/documents/upload-markdown", json=sample_markdown_upload_request
         )
 
         assert response.status_code == 200
@@ -331,14 +331,14 @@ class TestDocumentManagementEndpoints:
         files = {
             "file": ("test.txt", io.BytesIO(b"test content"), "text/plain")
         }
-        response = test_client.post("/documents/upload", files=files)
+        response = test_client.post("/api/v1/genai/documents/upload", files=files)
 
         assert response.status_code == 400
 
     @pytest.mark.integration
     def test_list_documents(self, test_client, mock_vector_store):
         """Test listing documents."""
-        response = test_client.get("/documents")
+        response = test_client.get("/api/v1/genai/documents")
 
         assert response.status_code == 200
         result = response.json()
@@ -352,7 +352,7 @@ class TestDocumentManagementEndpoints:
     def test_delete_document_success(self, test_client, mock_vector_store):
         """Test successful document deletion."""
         document_id = "test-doc-123"
-        response = test_client.delete(f"/documents/{document_id}")
+        response = test_client.delete(f"/api/v1/genai/documents/{document_id}")
 
         assert response.status_code == 200
         result = response.json()
@@ -367,7 +367,7 @@ class TestDocumentManagementEndpoints:
         mock_vector_store.delete_document.return_value = False
 
         document_id = "nonexistent-doc"
-        response = test_client.delete(f"/documents/{document_id}")
+        response = test_client.delete(f"/api/v1/genai/documents/{document_id}")
 
         assert response.status_code == 404
 
@@ -384,7 +384,7 @@ class TestConversationEndpoints:
     ):
         """Test successful conversation chat."""
         response = test_client.post(
-            "/conversation/chat", json=sample_conversation_request
+            "/api/v1/genai/conversation/chat", json=sample_conversation_request
         )
 
         assert response.status_code == 200
@@ -402,7 +402,7 @@ class TestConversationEndpoints:
     ):
         """Test getting conversation history."""
         conversation_id = "test-conversation-123"
-        response = test_client.get(f"/conversation/{conversation_id}/history")
+        response = test_client.get(f"/api/v1/genai/conversation/{conversation_id}/history")
 
         assert response.status_code == 200
         result = response.json()
@@ -420,7 +420,7 @@ class TestConversationEndpoints:
     ):
         """Test successful conversation clearing."""
         conversation_id = "test-conversation-123"
-        response = test_client.delete(f"/conversation/{conversation_id}")
+        response = test_client.delete(f"/api/v1/genai/conversation/{conversation_id}")
 
         assert response.status_code == 200
         result = response.json()
@@ -439,7 +439,7 @@ class TestConversationEndpoints:
         mock_conversation_manager.clear_conversation.return_value = False
 
         conversation_id = "nonexistent-conversation"
-        response = test_client.delete(f"/conversation/{conversation_id}")
+        response = test_client.delete(f"/api/v1/genai/conversation/{conversation_id}")
 
         assert response.status_code == 404
 
@@ -477,7 +477,7 @@ class TestErrorHandling:
 
         with open(corrupted_pdf_file, "rb") as f:
             files = {"file": ("corrupted.pdf", f, "application/pdf")}
-            response = test_client.post("/documents/upload", files=files)
+            response = test_client.post("/api/v1/genai/documents/upload", files=files)
 
         # Should handle corrupted files gracefully
         assert response.status_code in [400, 500]
