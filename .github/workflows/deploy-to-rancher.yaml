@@ -39,16 +39,16 @@ jobs:
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
       - name: Ensure namespace exists
-        run: kubectl get ns oops-ops || kubectl create ns oops-ops
+        run: kubectl get ns oopsops-test || kubectl create ns oopsops-test
 
       - name: Create OpenAI API key secret
         run: |
           kubectl create secret generic openai-secret \
-            --namespace oops-ops \
+            --namespace oopsops-test \
             --from-literal=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             --dry-run=client -o yaml | kubectl apply -f -
       
       - name: Deploy using Helm
         run: |
           helm upgrade --install oopsops-app ./helm/oopsops \
-            --namespace oops-ops
+            --namespace oopsops-test
