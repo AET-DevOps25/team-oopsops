@@ -13,7 +13,7 @@
 
 **Redacta** is an AI-powered document anonymization and summarization platform designed to help organizations handle sensitive documents while ensuring compliance with privacy regulations. The platform combines intelligent document processing with user-friendly interfaces to provide an end-to-end solution for document privacy management.
 
-### Pain Points
+### Potential Pain Points Addressed
 
 Redacta aims to address critical challenges faced by organizations handling sensitive documents:
 
@@ -25,7 +25,7 @@ Redacta aims to address critical challenges faced by organizations handling sens
 
 ### Key Features
 
-#### 1. **Intelligent Document Upload**
+#### 1. **Document Upload**
 
 - Support for PDF document formats with drag-and-drop interface
 - Automatic document parsing and text extraction
@@ -93,6 +93,8 @@ Redacta leverages **OpenAI GPT-4** models through a LangGraph-based workflow:
 
 ### Functional User Flows
 
+> Note: Formal user stories from the initial project documentation can be found in the [docs/system_overview.md](docs/system_overview.md) file. Please consult this for various diagrams and images that illustrate the user flows as well as the architecture of the system.
+
 #### **Flow 1: Complete Document Anonymization**
 
 1. **Upload**: User drags PDF file to upload area
@@ -119,7 +121,42 @@ Redacta leverages **OpenAI GPT-4** models through a LangGraph-based workflow:
 3. **Context Retrieval**: System retrieves relevant document sections using RAG
 4. **AI Response**: AI generates context-aware answers based on document content
 
----
+### Student Responsibilities
+
+**Hamza Chaouki**:
+
+- **Siddharth Khattar**:
+
+- Initial project breakdown and architecture design along with tickets creation
+- Creation of various stages and overall orchestration workflows for the CI/CD pipeline
+- Test development for the complete GenAI service
+- Design and mock data based implementation of the frontend pages Document Uploader, Editor, Archive and the Chat interface
+- Connection of the Document Archive frontend to the springboot backend
+- Implementation of the complete genai chat functionality backend (python + Langchain + Vector database + API)
+- AWS deployment along with its CD github workflow
+
+**Yosr Nabli**:
+
+- Created the "oopsops-test" GitHub Actions workflow to build and push container images automatically
+- Wrote unit tests, integration tests, and service application tests for the anonymization-service
+- Implemented the complete anonymization pipeline:
+
+  - Frontend adjustments tailored to anonymization requirements
+
+  - Backend development of the anonymization-service (including database setup, entities, DTOs, controller, and service layer)
+
+  - Integrated flow with genai-service
+
+- Implemented the summarization pipeline in the genai-service
+
+- Integrated summarization with the frontend and adapted the UI/UX accordingly
+- ⁠Set up the entire monitoring stack, including:
+
+  - Prometheus (metrics collection)
+
+  - Grafana (dashboard provisioning)
+
+  - Alertmanager (alerts and notifications)
 
 ## 2. Quick Start and Technical Details
 
@@ -179,19 +216,19 @@ docker-compose logs -f
 
 ### Service Architecture and Ports
 
-| Service                    | Port | Description                      | Health Check                          |
-| -------------------------- | ---- | -------------------------------- | ------------------------------------- |
-| **API Gateway** (Nginx)    | 8081 | Routes requests to microservices | http://localhost:8081                 |
-| **Client** (React SPA)     | 3000 | Frontend application             | http://localhost:3000                 |
-| **Document Service**       | 8091 | Document upload and management   | http://localhost:8091/actuator/health |
-| **Authentication Service** | 8092 | User auth and JWT management     | http://localhost:8092/actuator/health |
-| **Anonymization Service**  | 8094 | Document anonymization logic     | http://localhost:8094/actuator/health |
-| **GenAI Service**          | 8000 | AI processing and RAG            | http://localhost:8000/health          |
-| **PostgreSQL**             | 5432 | Primary database                 | `pg_isready -U dev_user`              |
-| **PgAdmin**                | 5050 | Database administration          | http://localhost:5050                 |
-| **Keycloak**               | 8085 | Identity and access management   | http://localhost:8085                 |
+| Service                    | Port | Description                      | OpenAPI Documentation                       | Health Check                          |
+| -------------------------- | ---- | -------------------------------- | ------------------------------------------- | ------------------------------------- |
+| **API Gateway** (Nginx)    | 8081 | Routes requests to microservices | -                                           | http://localhost:8081                 |
+| **Client** (React SPA)     | 3000 | Frontend application             | -                                           | http://localhost:3000                 |
+| **Document Service**       | 8091 | Document upload and management   | http://localhost:8091/swagger-ui/index.html | http://localhost:8091/actuator/health |
+| **Authentication Service** | 8092 | User auth and JWT management     | http://localhost:8092/swagger-ui/index.html | http://localhost:8092/actuator/health |
+| **Anonymization Service**  | 8094 | Document anonymization logic     | http://localhost:8094/swagger-ui/index.html | http://localhost:8094/actuator/health |
+| **GenAI Service**          | 8000 | AI processing and RAG            | http://localhost:8000/docs                  | http://localhost:8000/health          |
+| **PostgreSQL**             | 5432 | Primary database                 | -                                           | `pg_isready -U dev_user`              |
+| **PgAdmin**                | 5050 | Database administration          | -                                           | http://localhost:5050                 |
+| **Keycloak**               | 8085 | Identity and access management   | -                                           | http://localhost:8085                 |
 
-### API Documentation
+### API Documentation (Rough Overview)
 
 #### Authentication Service (`/api/v1/authentication`)
 
@@ -215,7 +252,7 @@ docker-compose logs -f
 #### GenAI Service (`/api/v1/genai`)
 
 - `POST /anonymize` – AI-powered anonymization with level selection.
-Returns a list of terms to replace (e.g., { original: "John", replacement: "Person A" }) rather than generating a fully anonymized text.
+  Returns a list of terms to replace (e.g., { original: "John", replacement: "Person A" }) rather than generating a fully anonymized text.
 - `POST /summarize` - Generate document summaries
 - `POST /chat` - Interactive document chat using RAG
 - `POST /documents/upload` - Upload documents to vector store
@@ -225,10 +262,10 @@ Returns a list of terms to replace (e.g., { original: "John", replacement: "Pers
 #### **Microservices Architecture**
 
 ```
-┌─────────────────┐    ┌──────────────────┐   
+┌─────────────────┐    ┌──────────────────┐
 │   React Client  │────│   Nginx Gateway  │
-│     (Port 3000) │    │    (Port 8081)   │    
-└─────────────────┘    └──────────────────┘   
+│     (Port 3000) │    │    (Port 8081)   │
+└─────────────────┘    └──────────────────┘
                                 │
                     ┌───────────┼───────────┐
                     │           │           │
@@ -259,7 +296,7 @@ Returns a list of terms to replace (e.g., { original: "John", replacement: "Pers
 2. **Authentication Flow**: Client → Auth Service → Keycloak → JWT
 3. **Document Processing**: Upload → Document Service → Text Extraction → Storage
 4. **AI Processing**: Document → GenAI Service → OpenAI API → ChromaDB → Response
-5. **Anonymization Flow**: Extracted Text + Level of Anonymization → GenAI Service → Anonymization Service to replace → GenAI → Response 
+5. **Anonymization Flow**: Extracted Text + Level of Anonymization → GenAI Service → Anonymization Service to replace → GenAI → Response
 
 ### Technology Stack
 
@@ -279,7 +316,7 @@ Returns a list of terms to replace (e.g., { original: "John", replacement: "Pers
 - **Security**: Spring Security with OAuth2 Resource Server
 - **Database**: PostgreSQL with JPA/Hibernate
 - **Documentation**: OpenAPI/Swagger integration
-- **Monitoring**: Spring Actuator with Prometheus metrics and  and visualization in Grafana dashboards, Alerts Definition is in Prometheus and managed via Alertmanager
+- **Monitoring**: Spring Actuator with Prometheus metrics and and visualization in Grafana dashboards, Alerts Definition is in Prometheus and managed via Alertmanager
 - **Build Tool**: Gradle 8.14
 
 #### **GenAI Service**
@@ -307,7 +344,7 @@ Returns a list of terms to replace (e.g., { original: "John", replacement: "Pers
 - **CI/CD**: GitHub Actions with automated testing
 - **Deployment**: AWS EC2 + Rancher Kubernetes
 - **Load Balancing**: Traefik for production deployments
-- **SSL**: Let's Encrypt automated certificate management
+- **SSL**: Let's Encrypt certificate management
 
 ### Deployment Overview
 
@@ -348,6 +385,8 @@ The project implements a step by step CI/CD pipeline with the following stages:
    - Automated deployment to AWS EC2 environment
    - Kubernetes deployment via Rancher
    - Environment-specific configuration management
+
+   > Note: The test results as well as the coverage reports are available in the GitHub Actions workflow run logs in the "Actions" tab of the repository.
 
 3. **Post-Deployment Validation**
 
@@ -397,11 +436,13 @@ The project implements a step by step CI/CD pipeline with the following stages:
 - Performance monitoring
 
 #### **Grafana Dashboards**
+
 - Error Rate Dashboard: Tracks 4xx/5xx HTTP error rates across all services
 - GenAI Latency Dashboard: Monitors response times for summarization and anonymization requests
 - Traffic Summary Dashboard: Aggregates and visualizes traffic for all service endpoints
 
 #### **Alerting**
+
 - Prometheus alert rules for critical thresholds (e.g., high error rate, slow response time)
 - AlertManager handles alert routing and notification (via email)
 - **Note**: Email notifications via Gmail SMTP are currently not functional due to authentication issues — despite using an app password, Gmail rejects the credentials with a “username and password not accepted” error.
@@ -427,64 +468,74 @@ The project implements a step by step CI/CD pipeline with the following stages:
 - Code coverage reporting
 - Automated quality gates
 - Documentation as code
-### Monitoring Instructions 
+
+### Monitoring Instructions
+
 To deploy the monitoring stack (Prometheus, Grafana, Alertmanager) via Helm:
+
 ```bash
 cd helm/monitoring
 ```
+
 ```bash
 helm upgrade --install oopsops-monitoring-app . \
   --namespace oopsops-monitoring \
   --create-namespace
 ```
+
 #### **Accessing Metrics & Dashboards**
-- Prometheus UI:
-You can create and run custom PromQL queries directly in Prometheus: https://prometheus.monitoring.student.k8s.aet.cit.tum.de/
--  Grafana Dashboards:
-Pre-configured dashboards are available in Grafana:
-https://grafana.monitoring.student.k8s.aet.cit.tum.de/
-The following dashboards are currently available:
 
-**Error Rate Dashboard:**
+- **Prometheus UI:**
+  You can create and run custom PromQL queries directly in Prometheus: https://prometheus.monitoring.student.k8s.aet.cit.tum.de/
+- **Grafana Dashboards:**
+  Pre-configured dashboards are available in Grafana:
+  https://grafana.monitoring.student.k8s.aet.cit.tum.de/
+- The following dashboards are currently available:
 
-- Shows 5xx and 4xx error rates for:
+  - **Error Rate Dashboard:**
 
-- Spring Boot services
+    - Shows 5xx and 4xx error rates for:
 
-- genai-service (FastAPI)
+    - Spring Boot services
 
-Prometheus queries like:
+    - genai-service (FastAPI)
 
-promql
-```bash
-rate(http_server_requests_seconds_count{status=~"5.."}[5m])
-rate(http_request_duration_seconds_count{status=~"5..", job="kubernetes-genai-service"}[5m])
-```
-**GenAI Service Latency:**
+    > Note: Prometheus queries such as through promql:
 
-- Shows average request latency for the GenAI service's endpoints:
-```bash
-/api/v1/genai/anonymize
-/api/v1/genai/summarize
-```
-Calculated as:
+    ```bash
+    rate(http_server_requests_seconds_count{status=~"5.."}[5m])
+    rate(http_request_duration_seconds_count{status=~"5..", job="kubernetes-genai-service"}[5m])
+    ```
 
-```bash
-rate(http_request_duration_seconds_sum{...}) / rate(http_request_duration_seconds_count{...})
-```
-**Traffic Summary by Service & Endpoint:**
+  - **GenAI Service Latency:**
 
-- Visualizes total request count per service and endpoint in the last 24 hours.
+    - Shows average request latency for the GenAI service's endpoints:
 
-- Colored bars grouped by microservice:
+      ```bash
+      /api/v1/genai/anonymize
+      /api/v1/genai/summarize
+      ```
 
-  1. Green → auth
+      Calculated as:
 
-  2. Orange → document
+      ```bash
+      rate(http_request_duration_seconds_sum{...}) / rate(http_request_duration_seconds_count{...})
+      ```
 
-  3. Purple → anonymization
+  - **Traffic Summary by Service & Endpoint:**
 
-  4. Red → genai
+    - Visualizes total request count per service and endpoint in the last 24 hours.
+
+    - Colored bars grouped by microservice:
+
+      1. Green → auth
+
+      2. Orange → document
+
+      3. Purple → anonymization
+
+      4. Red → genai
+
 ### Troubleshooting Guide
 
 #### **Common Issues**
