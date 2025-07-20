@@ -127,7 +127,7 @@ Redacta leverages **OpenAI GPT-4** models through a LangGraph-based workflow:
 
 #### Prerequisites
 
-- Docker and Docker Compose installed
+- Docker and Docker Compose installed OR Docker Desktop (Mac/Windows) installed
 - OpenAI API key
 - 8GB+ RAM recommended
 - Following ports available:
@@ -172,7 +172,7 @@ docker-compose logs -f
 
 4. **Access the Platform**
 
-- **Main Application**: http://localhost:8081
+- **Main Application**: http://localhost:3000
 - **API Gateway**: http://localhost:8081
 - **Database Admin**: http://localhost:5050 (admin@admin.com / admin)
 - **Keycloak Admin**: http://localhost:8085 (admin / admin)
@@ -214,7 +214,8 @@ docker-compose logs -f
 
 #### GenAI Service (`/api/v1/genai`)
 
-- `POST /anonymize` - AI-powered anonymization with level selection
+- `POST /anonymize` – AI-powered anonymization with level selection.
+Returns a list of terms to replace (e.g., { original: "John", replacement: "Person A" }) rather than generating a fully anonymized text.
 - `POST /summarize` - Generate document summaries
 - `POST /chat` - Interactive document chat using RAG
 - `POST /documents/upload` - Upload documents to vector store
@@ -224,10 +225,10 @@ docker-compose logs -f
 #### **Microservices Architecture**
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   React Client  │────│   Nginx Gateway  │────│  Spring Boot    │
-│     (Port 3000) │    │    (Port 8081)   │    │   Services      │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌──────────────────┐   
+│   React Client  │────│   Nginx Gateway  │
+│     (Port 3000) │    │    (Port 8081)   │    
+└─────────────────┘    └──────────────────┘   
                                 │
                     ┌───────────┼───────────┐
                     │           │           │
@@ -256,8 +257,9 @@ docker-compose logs -f
 
 1. **Request Flow**: Client → Nginx → Microservice → Database
 2. **Authentication Flow**: Client → Auth Service → Keycloak → JWT
-3. **Document Processing**: Upload → Document Service → Storage → Text Extraction
+3. **Document Processing**: Upload → Document Service → Text Extraction → Storage
 4. **AI Processing**: Document → GenAI Service → OpenAI API → ChromaDB → Response
+5. **Anonymization Flow**: Extracted Text + Level of Anonymization → GenAI Service → Anonymization Service to replace → GenAI → Response 
 
 ### Technology Stack
 
@@ -277,7 +279,7 @@ docker-compose logs -f
 - **Security**: Spring Security with OAuth2 Resource Server
 - **Database**: PostgreSQL with JPA/Hibernate
 - **Documentation**: OpenAPI/Swagger integration
-- **Monitoring**: Spring Actuator with Prometheus metrics
+- **Monitoring**: Spring Actuator with Prometheus metrics and  and visualization in Grafana dashboards, Alerts Definition is in Prometheus and managed via Alertmanager
 - **Build Tool**: Gradle 8.14
 
 #### **GenAI Service**
@@ -297,7 +299,7 @@ docker-compose logs -f
 - **Reverse Proxy**: Nginx for API Gateway
 - **Database**: PostgreSQL 14 Alpine
 - **Identity Provider**: Keycloak 22.0.3
-- **Monitoring**: Prometheus + Grafana (configured but disabled in docker-compose)
+- **Monitoring**: Prometheus + Grafana + Alertmanager in Kubernetes (configured but disabled in docker-compose)
 
 #### **DevOps & CI/CD**
 
@@ -328,7 +330,7 @@ services:
 - **Load Balancing**: Traefik with automatic SSL
 - **DNS**: Custom domains with automated certificate management
 - **Scaling**: Horizontal pod autoscaling based on CPU/memory
-- **Monitoring**: Prometheus metrics collection
+- **Monitoring**: Prometheus metrics collection + Grafana Dashboards + Alertmanager
 - **Logging**: Structured logging with log aggregation
 
 #### **CI/CD Pipeline**
