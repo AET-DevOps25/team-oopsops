@@ -3,7 +3,7 @@ name: Deploy to Rancher Test (PR branches)
 on:
   push:
     branches:
-      - '**'
+      - "**"
 
 env:
   REPO_OWNER: aet-devops25
@@ -19,7 +19,43 @@ env:
   GENAI_DIR: ./genai-service
 
 jobs:
+  test-genai-service:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('genai-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        working-directory: ./genai-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        working-directory: ./genai-service
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANONYMIZATION_SERVICE_URL: "http://mock-service"
+        run: |
+          chmod +x run_tests.sh
+          ./run_tests.sh
+
   build-and-push:
+    needs: [test-genai-service]
     runs-on: ubuntu-latest
 
     permissions:
@@ -28,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set image tag
         run: echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
@@ -51,7 +87,7 @@ jobs:
           docker build -t ${{ env.DOCUMENT_IMAGE }}:$TAG -t ${{ env.DOCUMENT_IMAGE }}:latest -f ${{ env.DOCUMENT_DIR }}/Dockerfile ./server
           docker push ${{ env.DOCUMENT_IMAGE }}:$TAG
           docker push ${{ env.DOCUMENT_IMAGE }}:latest
-      
+
       - name: Build and Push Anonymization Service Image
         run: |
           docker build -t ${{ env.ANONYMIZATION_IMAGE }}:$TAG -t ${{ env.ANONYMIZATION_IMAGE }}:latest -f ${{ env.ANONYMIZATION_DIR }}/Dockerfile ./server
@@ -69,3 +105,49 @@ jobs:
           docker build -t ${{ env.GENAI_IMAGE }}:$TAG -t ${{ env.GENAI_IMAGE }}:latest -f ${{ env.GENAI_DIR }}/Dockerfile ${{ env.GENAI_DIR }}
           docker push ${{ env.GENAI_IMAGE }}:$TAG
           docker push ${{ env.GENAI_IMAGE }}:latest
+
+  deploy-helm:
+    name: Deploy to Helm cluster
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Decode Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "1.27.2"
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: "3.11.0"
+
+      - name: Deploy via Helm
+        run: |
+          helm repo update
+
+          helm upgrade --install oopsops-app \
+            ./helm/oopsops \
+            --namespace oopsops-test \ 
+            --create-namespace \
+            --set client.image.tag=${{ env.TAG }} \
+            --set document-service.image.tag=${{ env.TAG }} \
+            --set anonymization-service.image.tag=${{ env.TAG }} \
+            --set authentication-service.image.tag=${{ env.TAG }} \
+            --set genai-service.image.tag=${{ env.TAG }} \
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/authentication-service -n oopsops-test
+          kubectl rollout status deployment/document-service     -n oopsops-test
+          kubectl rollout status deployment/anonymization-service -n oopsops-test
+          kubectl rollout status deployment/genai-service         -n oopsops-test
+          kubectl rollout status deployment/client               -n oopsops-test

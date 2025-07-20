@@ -22,10 +22,21 @@ import tempfile
 import shutil
 import requests
 import os
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 app = FastAPI(title="GenAI Service with RAG", version="1.0.0")
 
+# Initialize the instrumentator
+instrumentator = Instrumentator(
+    should_group_status_codes=False,
+    should_ignore_untemplated=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=[".*admin.*", "/metrics"],
+)
 
+# Instrument the app and expose the metrics
+instrumentator.instrument(app).expose(app)
 # Add error handlers
 @app.exception_handler(RuntimeError)
 async def runtime_error_handler(request, exc):

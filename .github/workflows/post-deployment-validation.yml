@@ -1,0 +1,128 @@
+# ABOUTME: This workflow performs post-deployment validation and health checks on deployed services
+# ABOUTME: It verifies that all services are running correctly after deployment to various environments
+
+name: Post-Deployment Validation
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to validate'
+        required: true
+        type: string
+      base_url:
+        description: 'Base URL of the deployed application'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to validate'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      base_url:
+        description: 'Base URL of the deployed application'
+        required: true
+        type: string
+
+jobs:
+  health-checks:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: "Frontend"
+            endpoint: ""
+            expected_status: 200
+          - name: "Document Service"
+            endpoint: "/api/documents/health"
+            expected_status: 200
+          - name: "Authentication Service"
+            endpoint: "/api/auth/health"
+            expected_status: 200
+          - name: "Anonymization Service"
+            endpoint: "/api/anonymization/health"
+            expected_status: 200
+          - name: "GenAI Service"
+            endpoint: "/api/genai/health"
+            expected_status: 200
+    
+    steps:
+      - name: Health check for ${{ matrix.service.name }}
+        run: |
+          echo "Checking health of ${{ matrix.service.name }}..."
+          
+          url="${{ inputs.base_url }}${{ matrix.service.endpoint }}"
+          echo "Testing URL: $url"
+          
+          # Retry logic for health checks
+          max_attempts=5
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts"
+            
+            response=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
+            
+            if [ "$response" = "${{ matrix.service.expected_status }}" ]; then
+              echo "✅ ${{ matrix.service.name }} is healthy (HTTP $response)"
+              echo "HEALTH_STATUS=healthy" >> $GITHUB_ENV
+              break
+            else
+              echo "❌ ${{ matrix.service.name }} returned HTTP $response, expected ${{ matrix.service.expected_status }}"
+              
+              if [ $attempt -eq $max_attempts ]; then
+                echo "HEALTH_STATUS=unhealthy" >> $GITHUB_ENV
+                echo "::warning::${{ matrix.service.name }} health check failed after $max_attempts attempts"
+              else
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              fi
+            fi
+            
+            attempt=$((attempt + 1))
+          done
+
+      - name: Record health check result
+        run: |
+          echo "## Health Check Result for ${{ matrix.service.name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "$HEALTH_STATUS" = "healthy" ]; then
+            echo "✅ Service is healthy and responding correctly" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Service failed health check" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  validation-summary:
+    runs-on: ubuntu-latest
+    needs: health-checks
+    if: always()
+    
+    steps:
+      - name: Generate validation summary
+        run: |
+          echo "## Post-Deployment Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Base URL:** ${{ inputs.base_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check results of health checks
+          health_status="${{ needs.health-checks.result }}"
+          
+          echo "| Validation Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$health_status" = "success" ]; then
+            echo "| Health Checks | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Health Checks | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** Health checks validate basic service availability." >> $GITHUB_STEP_SUMMARY

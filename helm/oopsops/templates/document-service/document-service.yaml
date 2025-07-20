@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: document-service
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: documentation-service
 spec:
   selector:
     app: document-service

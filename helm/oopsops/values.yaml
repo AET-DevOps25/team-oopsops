@@ -91,7 +91,7 @@ ingress:
   enabled: true
   className: nginx
   tls: true
-  host: test.redactiq.student.k8s.aet.cit.tum.de
+  host: redactiq.student.k8s.aet.cit.tum.de
   secretName: devops25-tls
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -101,3 +101,4 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+

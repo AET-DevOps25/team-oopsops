@@ -1,6 +1,10 @@
+# ABOUTME: Docker build and push workflow that creates and publishes container images to GHCR
+# ABOUTME: This workflow focuses solely on building Docker images after tests have passed
+
 name: Build and Push Docker Images
 
 on:
+  workflow_call:
   push:
     branches:
       - '**'
@@ -23,6 +27,9 @@ jobs:
           - service: authentication-service
             context: ./server
             dockerfile: ./server/authentication-service/Dockerfile
+          - service: anonymization-service
+            context: ./server
+            dockerfile: ./server/anonymization-service/Dockerfile
           - service: genai-service
             context: ./genai-service
             dockerfile: ./genai-service/Dockerfile
@@ -55,3 +62,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Image build summary
+        run: |
+          echo "## Docker Image Built: ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:** ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY

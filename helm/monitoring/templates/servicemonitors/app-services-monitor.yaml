@@ -1,0 +1,33 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: spring-services-monitor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - document-service
+          - authentication-service
+          - anonymization-service
+          - genai-service
+  namespaceSelector:
+    matchNames:
+      - oops-ops
+  endpoints:
+    - targetPort: 8091  # For document-service
+      path: /actuator/prometheus
+      interval: 15s
+    - targetPort: 8092  # For authentication-service
+      path: /actuator/prometheus
+      interval: 15s
+    - targetPort: 8094  # For anonymization-service
+      path: /actuator/prometheus
+      interval: 15s
+    - targetPort: 8000  # For genai-service
+      path: /metrics
+      interval: 15s
