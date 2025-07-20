@@ -11,12 +11,12 @@ export type AnonymizationRequestBody = {
 };
 
 export type AnonymizationDto = {
-  id:                   string
-  created:              string
-  documentId:           string
-  userId:               string
-  originalText:         string
-  anonymizedText:       string
-  anonymization_level:  string
-  changedTerms:         ChangedTerm[]
-}
+  id: string;
+  created: string;
+  documentId: string;
+  userId: string;
+  originalText: string;
+  anonymizedText: string;
+  anonymization_level: string;
+  changedTerms: ChangedTerm[];
+};

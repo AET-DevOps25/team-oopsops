@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import DocumentEditor from '@/components/DocumentEditor';
+import Navbar from '@/components/Navbar';
 
 const Editor = () => {
   const [searchParams] = useSearchParams();
@@ -11,11 +12,7 @@ const Editor = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="glass-panel h-16 fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto h-full flex items-center px-6">
-          <div className="font-bold text-xl">Redacta</div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="flex-1 pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">

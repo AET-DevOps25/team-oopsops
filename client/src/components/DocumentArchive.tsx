@@ -1,18 +1,21 @@
 // ABOUTME: Document archive component that displays user's documents from backend API
 // ABOUTME: Includes filtering, loading states, and proper error handling for document management
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import DocumentStatusFilter from '@/components/DocumentStatusFilter';
 import { fetchDocuments } from '@/services/documentService';
+import { fetchAnonymizations } from '@/services/anonymizeService';
 import { Document } from '@/types/document';
+import { ArchiveDocument } from '@/types/archiveDocument';
+
 import { useToast } from '@/hooks/use-toast';
 
-type DocumentStatus = 'All' | 'Anonymized' | 'Original' | 'Summarized';
+type DocumentStatus = 'All' | 'Anonymized' | 'Original';
 
 const DocumentArchive = () => {
   const [selectedStatus, setSelectedStatus] = useState<DocumentStatus>('All');
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<ArchiveDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -22,8 +25,56 @@ const DocumentArchive = () => {
       try {
         setLoading(true);
         setError(null);
-        const fetchedDocuments = await fetchDocuments();
-        setDocuments(fetchedDocuments);
+
+        // Fetch both original documents and anonymizations in parallel
+        const [originalDocs, anonymizations] = await Promise.all([
+          fetchDocuments(),
+          fetchAnonymizations().catch((err) => {
+            console.warn('Failed to fetch anonymizations:', err);
+            // Show a warning toast but don't fail the entire operation
+            toast({
+              title: 'Warning',
+              description:
+                'Could not load anonymized documents. Showing original documents only.',
+              variant: 'default',
+            });
+            return [];
+          }),
+        ]);
+
+        // Convert original documents to archive format
+        const archiveOriginals: ArchiveDocument[] = originalDocs.map((doc) => ({
+          id: doc.id,
+          fileName: doc.fileName,
+          uploadDate: doc.uploadDate,
+          status: 'Original' as const,
+          documentType: 'original' as const,
+          documentText: doc.documentText,
+        }));
+
+        // Convert anonymizations to archive format
+        const archiveAnonymized: ArchiveDocument[] = anonymizations.map(
+          (anon) => ({
+            id: anon.id,
+            fileName: `${getOriginalFileName(
+              originalDocs,
+              anon.documentId
+            )} (Anonymized)`,
+            uploadDate: anon.created,
+            status: 'Anonymized' as const,
+            documentType: 'anonymized' as const,
+            originalDocumentId: anon.documentId,
+            documentText: anon.anonymizedText,
+          })
+        );
+
+        // Combine and sort by upload date (newest first)
+        const allDocuments = [...archiveOriginals, ...archiveAnonymized].sort(
+          (a, b) =>
+            new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()
+        );
+
+        setDocuments(allDocuments);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load documents';
@@ -41,6 +92,15 @@ const DocumentArchive = () => {
     loadDocuments();
   }, [toast]);
 
+  // Helper function to get original document filename for anonymized documents
+  const getOriginalFileName = (
+    originalDocs: Document[],
+    documentId: string
+  ): string => {
+    const originalDoc = originalDocs.find((doc) => doc.id === documentId);
+    return originalDoc?.fileName || 'Unknown Document';
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString();
@@ -48,6 +108,8 @@ const DocumentArchive = () => {
       return 'Invalid date';
     }
   };
+
+  // Filter documents based on selected status
 
   const filteredDocuments =
     selectedStatus === 'All'
@@ -112,17 +174,23 @@ const DocumentArchive = () => {
                   className={`px-2 py-0.5 rounded-full transition-all duration-200 ${
                     doc.status === 'Anonymized'
                       ? 'bg-green-100 text-green-800 group-hover:bg-green-200'
-                      : doc.status === 'Summarized'
-                      ? 'bg-blue-100 text-blue-800 group-hover:bg-blue-200'
                       : 'bg-gray-100 text-gray-800 group-hover:bg-gray-200'
                   }`}
                 >
                   {doc.status}
                 </span>
               </div>
-              <Link to={`/editor?id=${doc.id}`}>
+              <Link
+                to={`/editor?id=${
+                  doc.documentType === 'anonymized'
+                    ? doc.originalDocumentId
+                    : doc.id
+                }`}
+              >
                 <Button className="w-full transition-all duration-200 group-hover:bg-primary/90">
-                  Open Document
+                  {doc.documentType === 'anonymized'
+                    ? 'View Anonymized'
+                    : 'Open Document'}
                 </Button>
               </Link>
             </div>
@@ -136,7 +204,7 @@ const DocumentArchive = () => {
               ? "You haven't uploaded any documents yet."
               : `No ${selectedStatus.toLowerCase()} documents found.`}
           </p>
-          <Link to="/">
+          <Link to="/home">
             <Button>Upload a document</Button>
           </Link>
         </div>

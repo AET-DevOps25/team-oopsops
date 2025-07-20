@@ -1,8 +1,8 @@
-import anonymizeApi from "@/api/anonymizeApi";
+import anonymizeApi from '@/api/anonymizeApi';
 import type {
   AnonymizationRequestBody,
   AnonymizationDto,
-} from "@/types/anonymize";
+} from '@/types/anonymize';
 
 export async function saveAnonymization(
   documentId: string,
@@ -20,15 +20,15 @@ export async function downloadAnonymizedPdf(anonymizationId: string) {
     responseType: 'blob',
   });
   const url = window.URL.createObjectURL(response.data);
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   link.href = url;
-  link.setAttribute("download", "anonymized_document.pdf");
+  link.setAttribute('download', 'anonymized_document.pdf');
   document.body.appendChild(link);
   link.click();
   link.remove();
 }
 
 export async function fetchAnonymizations(): Promise<AnonymizationDto[]> {
-  const { data } = await anonymizeApi.get<AnonymizationDto[]>("/");
+  const { data } = await anonymizeApi.get<AnonymizationDto[]>('/');
   return data;
 }
