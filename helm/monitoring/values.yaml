@@ -6,7 +6,7 @@ global:
 # Target application configuration
 # This defines where your application services are deployed
 targetApp:
-  namespace: oops-ops
+  namespace: oopsops-test
   services:
     documentService:
       port: 8091
