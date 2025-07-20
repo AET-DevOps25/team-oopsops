@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnonymization } from '@/hooks/useAnonymization';
 import { useSummarization } from '@/hooks/useSummarization';
 import AnonymizationPanel from './AnonymizationPanel';
 import SummarizationPanel from './SummarizationPanel';
 import EditAnonymizedDialog from './EditAnonymizedDialog';
+import ChatWidget from './ChatWidget';
 import { DocumentContent } from '@/types/documentContent';
-import { toast } from "sonner";
-
+import { Document } from '@/types/document';
+import { toast } from 'sonner';
 
 type DocumentEditorProps = {
-  documentId?: string | null;
+  document?: Document | undefined;
 };
 
-const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
-
+const DocumentEditor = ({ document }: DocumentEditorProps) => {
   const [activeTab, setActiveTab] = useState('anonymize');
   const [documentData, setDocumentData] = useState<DocumentContent>();
   const [selectedText, setSelectedText] = useState<string>('');
@@ -28,7 +28,6 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
   const [isAnonymized, setIsAnonymized] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-
   // Custom hooks
   const {
     anonymizationLevel,
@@ -39,7 +38,14 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     handleSaveEdit,
     handleDownload,
     handleSave,
-  } = useAnonymization(documentData, setDocumentData, isAnonymized, setIsAnonymized, isSaved, setIsSaved);
+  } = useAnonymization(
+    documentData,
+    setDocumentData,
+    isAnonymized,
+    setIsAnonymized,
+    isSaved,
+    setIsSaved
+  );
 
   const {
     summarizationLevel,
@@ -48,33 +54,41 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     handleSummarizationLevel,
     handleGenerateSummary,
     getSummarizationLevelDescription,
-    handleDownloadSummary
+    handleDownloadSummary,
   } = useSummarization(documentData, setDocumentData);
 
   useEffect(() => {
     if (documentData) {
-      console.log("Current documentData:", documentData);
+      console.log('Current documentData:', documentData);
     }
   }, [documentData]);
 
-
   useEffect(() => {
-    console.log('Fetching document with ID:', documentId);
+    console.log('Fetching document with ID:', document);
 
     const documentInfo = sessionStorage.getItem('currentDocument');
-    if (documentInfo) {
-      const parsedInfo = JSON.parse(documentInfo);
+    if (document) {
       const realContent: DocumentContent = {
-        title: (parsedInfo.fileName?.replace(/\.pdf$/i, "") || "Untitled"),
-        paragraph: parsedInfo.documentText || "",
+        title: document.fileName?.replace(/\.pdf$/i, '') || 'Untitled',
+        paragraph: document.documentText || '',
         sensitive: [],
-        summary: ""
+        summary: '',
       };
-
-
       setDocumentData(realContent);
+    } else {
+      const documentInfo = sessionStorage.getItem('currentDocument');
+      if (documentInfo) {
+        const parsedInfo = JSON.parse(documentInfo);
+        const realContent: DocumentContent = {
+          title: parsedInfo.fileName?.replace(/\.pdf$/i, '') || 'Untitled',
+          paragraph: parsedInfo.documentText || '',
+          sensitive: [],
+          summary: '',
+        };
+        setDocumentData(realContent);
+      }
     }
-  }, [documentId]);
+  }, [document]);
 
   if (!documentData) {
     return <div className="p-4 text-muted-foreground">Loading document...</div>;
@@ -119,6 +133,20 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
     setCurrentEditItem(null);
   };
 
+  // Get the current document content for the chat widget
+  const getCurrentDocumentContent = () => {
+    if (!documentData) return '';
+
+    // Return the current paragraph content (could be original or anonymized)
+    return documentData.paragraph;
+  };
+
+  const getDocumentStatus = () => {
+    if (isAnonymized || hasManualEdits) {
+      return 'anonymized';
+    }
+    return 'original';
+  };
   return (
     <div className="w-full">
       <Tabs
@@ -126,7 +154,7 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
         value={activeTab}
         onValueChange={(value) => {
           if (value === 'summarize' && !isAnonymized) {
-            toast.warning("Please anonymize your document before summarizing.");
+            toast.warning('Please anonymize your document before summarizing.');
             return;
           }
           setActiveTab(value);
@@ -136,7 +164,11 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
           <TabsTrigger value="anonymize">Anonymize</TabsTrigger>
           <TabsTrigger
             value="summarize"
-            className={!isAnonymized ? 'pointer-events-auto text-muted-foreground opacity-50' : ''}
+            className={
+              !isAnonymized
+                ? 'pointer-events-auto text-muted-foreground opacity-50'
+                : ''
+            }
           >
             Summarize
           </TabsTrigger>
@@ -180,6 +212,14 @@ const DocumentEditor = ({ documentId }: DocumentEditorProps) => {
         onReplacementChange={setTempReplacement}
         onSave={handleSaveEditInternal}
         onCancel={handleCancelEdit}
+      />
+
+      {/* Chat Widget - available for any document content */}
+      <ChatWidget
+        documentContent={getCurrentDocumentContent()}
+        documentTitle={documentData?.title}
+        documentStatus={getDocumentStatus()}
+        isVisible={!!documentData} // Show whenever document is loaded
       />
     </div>
   );

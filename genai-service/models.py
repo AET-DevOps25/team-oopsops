@@ -12,17 +12,21 @@ class GenAiResponse(BaseModel):
     responseText: str
     changedTerms: Optional[List[ChangedTerm]] = None
 
+
 class SummarizeRequest(BaseModel):
     originalText: str
     level: Literal["short", "medium", "long"]
+
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str
 
+
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     document: Optional[str] = None
+
 
 class ChatResponse(BaseModel):
     reply: str
@@ -39,6 +43,13 @@ class DocumentUploadResponse(BaseModel):
 class MarkdownUploadRequest(BaseModel):
     filename: str
     content: str
+
+
+# New model for text upload
+class TextUploadRequest(BaseModel):
+    content: str
+    title: Optional[str] = "Untitled Text"
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class ConversationRequest(BaseModel):
